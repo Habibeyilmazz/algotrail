@@ -287,7 +287,12 @@ try {
     await p.goto(`${BASE}#/drills/rotated-minimum`);
     await p.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
     await p.evaluate(() => {
-      ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => localStorage.setItem(`probe-${t}`, document.querySelector('textarea').value.slice(-6))));
+      // The editor's text at each event, and the value React last rendered into it (its props on the element).
+      ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => {
+        const el = document.querySelector('textarea');
+        const props = el[Object.keys(el).find((k) => k.startsWith('__reactProps'))];
+        localStorage.setItem(`probe-${t}`, `editor ends ${el.value.slice(-6)}, React ends ${props?.value?.slice(-6)}`);
+      }));
       // Record each save the app makes from here on: during which event, whether it threw, and the draft it held.
       const set = Storage.prototype.setItem;
       let n = 0;
