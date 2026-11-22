@@ -502,6 +502,28 @@ main {
   font-size: 0.85rem;
 }
 
+/* Keep the demo array on one row beside the hero copy: cells share the width instead of wrapping. */
+@media (min-width: 601px) {
+  .demo .panel {
+    flex: 1 1 100%;
+  }
+
+  .demo .arr {
+    flex-wrap: nowrap;
+  }
+
+  .demo .arr-slot {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .demo .arr-cell {
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+  }
+}
+
 .overview,
 .deck {
   width: 100%;
