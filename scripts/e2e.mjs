@@ -1,9 +1,14 @@
 // End-to-end smoke test against the production build.
 // Usage: npm run e2e   (builds, then serves dist/ on port 4202)
+//        BROWSER=firefox npm run e2e   (or webkit; needs: npx playwright install firefox)
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
+
+const BROWSER = process.env.BROWSER ?? 'chromium';
+const engine = { chromium, firefox, webkit }[BROWSER];
+if (!engine) throw new Error(`BROWSER must be chromium, firefox or webkit, not ${BROWSER}`);
 
 const PORT = 4202;
 const BASE = `http://localhost:${PORT}/`;
@@ -31,7 +36,8 @@ const step = async (name, fn) => {
 let browser;
 try {
   await waitForServer();
-  browser = await chromium.launch();
+  browser = await engine.launch();
+  console.log(`# ${BROWSER} ${browser.version()}`);
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -84,7 +90,9 @@ try {
   });
 
   await step('visualizer input and step travel in a link; Back undoes an apply', async () => {
-    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    // Only Chromium lets a test read the real clipboard; elsewhere record what the page writes to it.
+    const realClipboard = BROWSER === 'chromium';
+    if (realClipboard) await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.goto(`${BASE}#/visualize/binary-search`);
     await page.getByLabel('Sorted numbers').fill('3 6 9 12 15');
     await page.getByLabel('Target').fill('12');
@@ -94,9 +102,10 @@ try {
     await page.locator('body').click({ position: { x: 5, y: 5 } });
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
+    if (!realClipboard) await page.evaluate(() => (navigator.clipboard.writeText = async (t) => void (window.__copied = t)));
     await page.getByRole('button', { name: 'Copy link' }).click();
     await page.getByText('Link to step 3 copied.').waitFor();
-    const link = await page.evaluate(() => navigator.clipboard.readText());
+    const link = await page.evaluate(() => (window.__copied ?? navigator.clipboard.readText()));
     assert.equal(link, `${BASE}#/visualize/binary-search?a=3+6+9+12+15&target=12&step=3`);
 
     const other = await browser.newPage(); // a fresh profile, like another device
@@ -423,7 +432,7 @@ try {
     );
     assert.match(blocked, /^script-src/);
     // The browser logs the blocked script as a console error; that one is expected.
-    errors.splice(before, errors.length - before, ...errors.slice(before).filter((e) => !/Content Security Policy/.test(e)));
+    errors.splice(before, errors.length - before, ...errors.slice(before).filter((e) => !/Content.Security.Policy/i.test(e)));
   });
 
   await step('a browser that refuses to save says so', async () => {
