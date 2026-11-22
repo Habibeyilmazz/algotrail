@@ -97,6 +97,8 @@ function Workbench({ algo }: { algo: Algo }) {
       if (!act) return;
       // Let Space activate a focused button normally instead of double-firing.
       if (e.key === ' ' && (e.target as HTMLElement).closest('button, a, select')) return;
+      // A focused wide table scrolls with the arrow keys, Home and End.
+      if (e.key !== ' ' && (e.target as HTMLElement).classList?.contains('grid-table')) return;
       e.preventDefault();
       act();
     };

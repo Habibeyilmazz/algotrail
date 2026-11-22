@@ -172,6 +172,12 @@ try {
       const over = await phone.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       assert.ok(over <= 0, `${route || 'home'} overflows by ${over}px`);
     }
+    // The knapsack table is wider than a phone: focused, the arrow keys scroll it instead of stepping.
+    await phone.goto(`${BASE}#/visualize/knapsack`);
+    await phone.locator('.grid-table').focus();
+    await phone.keyboard.press('ArrowRight');
+    assert.equal(await phone.locator('.step-count').innerText(), '1/38');
+    await phone.waitForFunction(() => document.querySelector('.grid-table').scrollLeft > 0, null, { timeout: 2000 });
     await phone.close();
   });
 
