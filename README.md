@@ -24,7 +24,7 @@ Other scripts:
 npm test           # unit tests (vitest): algorithms, input fuzzing, every reference solution, runner, SM-2, storage
 npm run typecheck  # tsc
 npm run build      # static site in dist/
-npm run e2e        # builds, then runs a Playwright smoke test against dist/ on port 4202
+npm run e2e        # builds, then runs the main user journeys in Playwright (Chromium) against dist/ on port 4202
                    # (first time only: npx playwright install chromium)
 ```
 
@@ -65,7 +65,7 @@ There is no backend. `dist/` is a static site that works from any folder, includ
 - **Rendering.** React draws panels as HTML (arrays, tables) or SVG (graphs on a circle, trees with a small tidy layout). A FLIP hook measures keyed elements before and after each frame and tweens the difference with GSAP.
 - **Drill runner.** `src/drills/runner.ts` compiles your code with `new Function` inside a module worker and deep-clones each test's arguments. The worker never sees the expected answers: it posts back the raw return value, and the page validates each message, compares the value structurally and clips long text, so code cannot fake a pass, crash the page or flood it. The page terminates the worker on timeout. A unit test runs every reference solution through the same runner, and checks that the empty starter fails.
 - **Content-Security-Policy.** The build adds a CSP meta tag (`vite.config.ts`) that blocks inline and third-party scripts. It allows `'unsafe-eval'` because some browsers apply the page policy to the drill worker, which needs `new Function`.
-- **Storage.** One `localStorage` key, rebuilt field by field on load so hand edits or old data cannot break the app. Other tabs stay in sync through the `storage` event. A backup file is the same data wrapped as `{ app: "algotrail", version: 1, exportedAt, progress }`; import refuses anything else, caps the size, and runs `progress` through the same sanitizer (`parseBackup` in `src/lib/store.ts`).
+- **Storage.** One `localStorage` key, rebuilt field by field on load so hand edits or old data cannot break the app. Other tabs stay in sync through the `storage` event. A backup file is the same data wrapped as `{ app: "algotrail", version: 1, exportedAt, progress }`; import refuses anything else, caps the size, and runs `progress` through the same sanitizer (`parseBackup` in `src/lib/store.ts`). Drafts are saved 0.4 s after typing stops and whenever the editor loses focus; a draft of 50,000 characters or more is not saved (the drill page says so), so one huge paste cannot fill storage. If the browser refuses a save anyway, the footer says progress lasts only until the tab closes.
 
 ## Keyboard
 

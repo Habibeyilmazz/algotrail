@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Reliability pass (round 5, tests)
+
+Tried to break the built app with Playwright (odd, empty, huge and non-ASCII input, malformed and BOM-prefixed backup files, offline runs, blocked storage, odd return values from drill code) and checked the time-zone and boundary logic with unit tests. Each bug below was reproduced, got a failing test first, then the fix. Visualizer inputs held up: every probe gave frames or a clear input error. Codex reviewed the diff and found nothing.
+
+- **Fixed: Export could miss the last 0.4 s of typing** (a gap reported last round). The drill draft is now also saved when the editor loses focus, which clicking Export (or anything else) does first. e2e: type, click Export at once, check the file.
+- **Fixed: one huge paste stopped all saving.** A 6M-character draft overflowed `localStorage`, so every later save in that tab (hints, solved drills, review grades) failed silently and was gone after a reload. Drafts of 50,000 characters or more (`MAX_CODE`, the cap `load()` already applied) are no longer stored; the last draft that fits is kept and the drill page says the long one is not saved. e2e covers it.
+- **Fixed: a failed save was silent.** When the browser refuses to store progress (quota, blocked storage), the footer now says progress lasts only until the tab closes and suggests exporting a backup. e2e stubs `setItem` to throw.
+- **Fixed: offline, a test run blamed the code.** If the worker script cannot load, the drill page said "Could not run your code. The code could not be run." It now says the test runner did not load and to reconnect. e2e runs a drill with the browser offline.
+- **Fixed: declining an import left an older, unrelated message** (for example "This file is not valid JSON") in the footer. It now says "Import cancelled. Nothing changed."
+- **Fixed: backup file names used the UTC date**, so a backup made at 01:00 in UTC+3 was named after the day before. `backupFileName` uses the local date; tested in UTC+14 and UTC-11.
+- **Fixed: review times said "in 60 min" and "in 24 h"** just under the hour and day boundaries; they now round up to "in 1 h" and "in 1 day".
+- **Fixed: drill results showed a BigInt `2n` as `2`**, identical to the expected number, and an `async` solution's Promise as `{}`. They now read `2n` and "Promise (return the value itself, not a Promise)".
+- **Fixed: trie input lowercased before checking**, so `İz` was reported as `"i̇z"` and the Kelvin sign `K` was accepted as `k`. Words are checked as typed, then lowercased.
+- The e2e suite now has 18 steps (about 10 s including the build) and prints the console errors it finds.
+- **Checked, no change needed:** a UTF-8 BOM in a backup is accepted; empty, binary, UTF-16 and `progress: null` files are refused with a message; far-future `exportedAt` dates display; drill code that throws `null`, returns a symbol, a cyclic object, a 1M-element array or logs 100,000 lines is reported without breaking the page.
+- **Still open:** importing replaces rather than merges (a design choice, shown in the confirm dialog). Only Chromium was tested; Safari and Firefox were not (no browsers for them on this machine). A backup can list solved drills whose ids no longer exist, and the import prompt counts them. Typing and closing the tab within 0.4 s can still lose those keystrokes. FSRS, syntax highlighting and visualizer input in the URL are not built. GitHub Pages is not enabled.
+
 ### Progress backups (round 4, feature)
 
 Chosen after using the app as a newcomer: everything (solved drills, saved code, the review schedule) lived in one browser's `localStorage` with no way out, so a new laptop, a phone, or clearing site data lost weeks of spaced review. The footer only offered "Erase my progress".
