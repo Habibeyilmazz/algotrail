@@ -17,6 +17,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- A malformed link such as `#/drills/%` no longer leaves a blank page.
+- "Erase my progress" reloads the page, so a draft autosave or test run still in flight cannot write the erased progress back.
+- Graph inputs reject the same edge listed twice (it drew two overlapping edges that both lit up as the shortest-path tree). Opposite directions stay allowed in topological sort.
+- Topological sort no longer says every unplaced node is on a cycle; some only wait on one.
 - Trie note says "1 word starts with", not "1 word start with".
 - Removed unused `orderedPatterns`, `setPlaying` and an unused editor ref.
 - A test run no longer overwrites code typed while the tests were running, and a draft typed just before leaving a drill is saved.
