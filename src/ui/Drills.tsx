@@ -10,6 +10,7 @@ import { describeDue, newCard } from '../lib/srs';
 import { getProgress as progressNow, MAX_CODE, update, updateDrill, useProgress } from '../lib/store';
 import { CodeEditor } from './CodeEditor';
 import { ignoreKey } from './keys';
+import { useNow } from './Review';
 
 export function Inline({ text }: { text: string }) {
   // `code` spans only; everything else is plain text (no HTML injection).
@@ -82,6 +83,7 @@ export function DrillsPage() {
 export function PatternPage({ id }: { id: string }) {
   const pattern = patternById(id);
   const { cards } = useProgress();
+  const now = useNow();
   if (!pattern) return <NotFound what="pattern" />;
   const card = cards[pattern.id];
   return (
@@ -111,7 +113,7 @@ export function PatternPage({ id }: { id: string }) {
           <PatternDrills pattern={pattern} />
           <h2>Review</h2>
           {card ? (
-            <p>In your review deck, next review {describeDue(card, Date.now())}.</p>
+            <p>In your review deck, next review {describeDue(card, now)}.</p>
           ) : (
             <>
               <p>Not in your review deck yet. It is added when you solve a drill here.</p>
