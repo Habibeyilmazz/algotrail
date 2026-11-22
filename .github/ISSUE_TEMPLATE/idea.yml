@@ -1,0 +1,25 @@
+name: Drill or visualizer idea
+description: Suggest a new drill, a new visualizer or an improvement.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of idea
+      options:
+        - New drill
+        - New visualizer
+        - Improvement to something that exists
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: For a drill, describe it in your own words; please do not paste problem statements from LeetCode or other sites.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it helps a learner
