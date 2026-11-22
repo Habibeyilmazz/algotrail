@@ -6,7 +6,7 @@ body:
     id: steps
     attributes:
       label: Steps to reproduce
-      description: The page (for example `#/visualize/dijkstra`) and what you did. For a visualizer, paste the input you used.
+      description: The page (for example `#/visualize/dijkstra`) and what you did. For a visualizer, paste its *Copy link* address (it holds your input and the step) or the input you used.
     validations:
       required: true
   - type: textarea
