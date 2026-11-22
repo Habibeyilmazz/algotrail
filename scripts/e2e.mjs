@@ -63,7 +63,8 @@ try {
     assert.match(await page.getByRole('alert').innerText(), /"x" is not a whole number/);
     await page.getByLabel('Sorted numbers').fill('5 10 15 20');
     await page.getByLabel('Target').fill('20');
-    await page.getByRole('button', { name: 'Visualize' }).click();
+    await page.getByLabel('Target').press('Control+Enter'); // the documented shortcut, from a one-line field
+    await page.getByLabel('Target').blur(); // so End steps the player
     assert.equal(await page.getByRole('alert').count(), 0);
     await page.keyboard.press('End');
     assert.match(await page.locator('.note').innerText(), /a\[3\] = 20/);

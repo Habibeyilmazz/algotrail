@@ -131,7 +131,14 @@ function Workbench({ algo }: { algo: Algo }) {
         </p>
       </header>
 
-      <form className="inputs" onSubmit={run} aria-describedby={error ? 'input-error' : undefined}>
+      <form
+        className="inputs"
+        onSubmit={run}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) run(e);
+        }}
+        aria-describedby={error ? 'input-error' : undefined}
+      >
         {algo.inputs.map((f) => (
           <label key={f.id} className={f.multiline ? 'field wide' : 'field'}>
             <span>{f.label}</span>
@@ -141,9 +148,6 @@ function Workbench({ algo }: { algo: Algo }) {
                 rows={Math.min(6, Math.max(2, draft[f.id].split('\n').length))}
                 spellCheck={false}
                 onChange={(e) => setDraft({ ...draft, [f.id]: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) run(e);
-                }}
               />
             ) : (
               <input value={draft[f.id]} spellCheck={false} autoComplete="off" onChange={(e) => setDraft({ ...draft, [f.id]: e.target.value })} />
