@@ -4,8 +4,21 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- 44 drill test cases in 27 drills (often the two shown as examples) reused the exact inputs of well-known LeetCode and textbook examples. They now use new inputs, worked out by hand and confirmed by the reference solutions. The drill screenshot was retaken.
+- `npm run e2e` now builds first, so a fresh clone no longer fails with "preview server did not start" and a stale `dist/` is never tested.
+- A mistyped visualizer link (`#/visualize/<unknown>`) shows "No such visualizer" instead of silently opening binary search.
+- "Reset code" asks before replacing code that differs from the starter.
+
+### Added
+
+- `src/algos/fuzz.test.ts`: 400 random edits of each visualizer's example input must give frames or a readable input error, never a crash.
+
 ### Fixed
 
+- Trie note says "1 word starts with", not "1 word start with".
+- Removed unused `orderedPatterns`, `setPlaying` and an unused editor ref.
 - A test run no longer overwrites code typed while the tests were running, and a draft typed just before leaving a drill is saved.
 - Blocked `localStorage` no longer stops the app from starting.
 - Review ignores stored cards for unknown patterns or with fractional counters; SM-2 intervals round up as the algorithm specifies.
@@ -29,5 +42,5 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Notes for the next contributor
 
 - Add a visualizer: write an `Algo` in `src/algos/`, register it in `src/algos/index.ts`, add result tests in `algos.test.ts`. The e2e test expects 18 links in the sidebar; update the count.
-- Add a drill: append to one of `src/drills/problems-*.ts`. `drills.test.ts` runs the reference solution against its tests automatically.
+- Add a drill: append to one of `src/drills/problems-*.ts`. `drills.test.ts` runs the reference solution against its tests automatically. Make up new test inputs; do not reuse examples from judge sites. The first two tests are shown as examples on the drill page.
 - Screenshots in `docs/screenshots/` were taken from the real app with Playwright; `scripts/shots.mjs <dir> [baseUrl]` captures the main screens.

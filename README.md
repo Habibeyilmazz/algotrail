@@ -21,7 +21,7 @@ npm run dev        # http://localhost:4200
 Other scripts:
 
 ```sh
-npm test           # unit tests (vitest): algorithms, every reference solution, runner, SM-2, storage
+npm test           # unit tests (vitest): algorithms, input fuzzing, every reference solution, runner, SM-2, storage
 npm run typecheck  # tsc
 npm run build      # static site in dist/
 npm run e2e        # builds, then runs a Playwright smoke test against dist/ on port 4202
