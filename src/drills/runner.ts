@@ -40,6 +40,7 @@ export function show(v: unknown, depth = 0): string {
   if (typeof v === 'string') return JSON.stringify(v);
   if (typeof v === 'function') return 'function';
   if (typeof v !== 'object' || v === null) return String(v);
+  if (v instanceof Promise) return 'Promise (return the value itself, not a Promise)';
   if (depth > 6) return '…';
   if (Array.isArray(v)) {
     const head = v.slice(0, 50).map((x) => show(x, depth + 1));
