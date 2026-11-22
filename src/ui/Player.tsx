@@ -63,7 +63,8 @@ export function Pseudocode({ algo, line }: { algo: Algo; line: number }) {
       {algo.pseudocode.map((text, k) => (
         <li key={k} className={k === line ? 'current' : ''} aria-current={k === line ? 'step' : undefined}>
           <span className="pseudo-n">{k + 1}</span>
-          <code>{text}</code>
+          {/* Leading spaces become padding, so a wrapped line stays under its own indent (plus a 2ch hang). */}
+          <code style={{ paddingLeft: `${text.length - text.trimStart().length + 2}ch` }}>{text.trimStart()}</code>
         </li>
       ))}
     </ol>
@@ -72,7 +73,7 @@ export function Pseudocode({ algo, line }: { algo: Algo; line: number }) {
 
 export function Vars({ vars }: { vars: Frame['vars'] }) {
   const entries = Object.entries(vars);
-  if (!entries.length) return null;
+  if (!entries.length) return <p className="vars-none">None yet at this step.</p>;
   return (
     <dl className="vars">
       {entries.map(([k, v]) => (
