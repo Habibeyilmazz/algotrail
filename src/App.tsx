@@ -33,7 +33,7 @@ function page(route: Route) {
     case 'home':
       return <HomePage />;
     case 'viz':
-      return <VisualizerPage id={route.id} />;
+      return <VisualizerPage id={route.id} query={route.query} />;
     case 'drills':
       return <DrillsPage />;
     case 'drill':
@@ -134,7 +134,7 @@ export function App() {
     const onKey = (e: KeyboardEvent) => {
       if (ignoreKey(e) || e.metaKey || e.ctrlKey || e.altKey) return;
       const go: Record<string, () => void> = {
-        v: () => (location.hash = href.viz(route.page === 'viz' ? route.id || ALGOS[0].id : ALGOS[0].id)),
+        v: () => (location.hash = route.page === 'viz' ? href.viz(route.id || ALGOS[0].id, route.query) : href.viz(ALGOS[0].id)),
         d: () => (location.hash = href.drills),
         r: () => (location.hash = href.review),
         t: cycleTheme,

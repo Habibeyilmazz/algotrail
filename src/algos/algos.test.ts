@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALGOS, algoById, defaults } from './index';
+import { ALGOS, algoById, defaults, inputFromQuery, inputQuery, MAX_FIELD, stepFromQuery } from './index';
 import type { ArrayPanel, Frame, GraphPanel, GridPanel, ListPanel } from './types';
 import { InputError } from './types';
 
@@ -150,5 +150,35 @@ describe('input validation', () => {
     ['trie', { words: 'ok n0pe' }],
   ])('%s rejects %o', (id, input) => {
     expect(() => run(id, input as Record<string, string>)).toThrow(InputError);
+  });
+});
+
+describe('share links', () => {
+  const lcsAlgo = algoById('lcs')!;
+
+  it('round-trips edited input and leaves unedited fields out', () => {
+    const input = { ...defaults(lcsAlgo), a: 'A B?&=#\nC' };
+    const q = inputQuery(lcsAlgo, input);
+    expect(q).toMatch(/^a=/);
+    expect(q).not.toMatch(/(^|&)b=/);
+    expect(inputFromQuery(lcsAlgo, q)).toEqual(input);
+    expect(inputQuery(lcsAlgo, defaults(lcsAlgo))).toBe('');
+  });
+
+  it.each(ALGOS.map((a) => [a.id, a]))('%s: the example fits in a link and no field is called step', (_, algo) => {
+    expect(algo.inputs.every((f) => f.id !== 'step' && f.initial.length <= MAX_FIELD)).toBe(true);
+    const all = Object.fromEntries(algo.inputs.map((f) => [f.id, f.initial + ' ']));
+    expect(inputFromQuery(algo, inputQuery(algo, all))).toEqual(all);
+  });
+
+  it('treats the query as untrusted', () => {
+    expect(inputFromQuery(lcsAlgo, 'a=X&a=Y&evil=1&__proto__=1')).toEqual({ ...defaults(lcsAlgo), a: 'X' });
+    expect(inputFromQuery(lcsAlgo, `a=${'Z'.repeat(5000)}`).a).toHaveLength(MAX_FIELD);
+    expect(inputFromQuery(lcsAlgo, '%E0%A4%A&a')).toEqual({ ...defaults(lcsAlgo), a: '' });
+  });
+
+  it('reads a 1-based step and ignores junk', () => {
+    expect(stepFromQuery('a=1&step=5')).toBe(4);
+    for (const q of ['', 'step=0', 'step=-2', 'step=1.5', 'step=abc', 'step=']) expect(stepFromQuery(q)).toBe(0);
   });
 });

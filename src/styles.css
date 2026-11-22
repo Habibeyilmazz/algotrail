@@ -731,6 +731,26 @@ main {
   flex-wrap: wrap;
 }
 
+.copy-status {
+  flex: 1 1 auto;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.copy-status input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font: 400 0.85rem var(--font-code);
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+
 .input-error {
   flex-basis: 100%;
   margin: 0;

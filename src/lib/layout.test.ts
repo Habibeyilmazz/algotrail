@@ -39,7 +39,9 @@ import { parseHash } from './router';
 describe('parseHash', () => {
   it('maps hashes to routes', () => {
     expect(parseHash('')).toEqual({ page: 'home' });
-    expect(parseHash('#/visualize/dijkstra')).toEqual({ page: 'viz', id: 'dijkstra' });
+    expect(parseHash('#/visualize/dijkstra')).toEqual({ page: 'viz', id: 'dijkstra', query: '' });
+    expect(parseHash('#/visualize/lcs?a=AB%3FC&b=x?y')).toEqual({ page: 'viz', id: 'lcs', query: 'a=AB%3FC&b=x?y' });
+    expect(parseHash('#/drills/floor-sqrt?step=3')).toEqual({ page: 'drill', id: 'floor-sqrt' });
     expect(parseHash('#/drills')).toEqual({ page: 'drills' });
     expect(parseHash('#/drills/floor-sqrt')).toEqual({ page: 'drill', id: 'floor-sqrt' });
     expect(parseHash('#/patterns/heap')).toEqual({ page: 'pattern', id: 'heap' });

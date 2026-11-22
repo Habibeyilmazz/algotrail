@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ALGOS, algoById, defaults } from '../algos';
+import { ALGOS, algoById, defaults, inputFromQuery, inputQuery, stepFromQuery } from '../algos';
 import { InputError, type Algo, type Frame } from '../algos/types';
 import { patternById } from '../drills/patterns';
-import { href } from '../lib/router';
+import { href, navigate } from '../lib/router';
 import { Pseudocode, setSpeed, Stage, Transport, usePlayer, Vars } from './Player';
 import { ignoreKey } from './keys';
 
@@ -17,7 +17,7 @@ function compute(algo: Algo, input: Record<string, string>): { frames: Frame[] }
   }
 }
 
-export function VisualizerPage({ id }: { id: string }) {
+export function VisualizerPage({ id, query }: { id: string; query: string }) {
   // A bare #/visualize opens the first algorithm; a mistyped id says so instead of silently showing another one.
   const algo = id ? algoById(id) : ALGOS[0];
   return (
@@ -52,7 +52,7 @@ export function VisualizerPage({ id }: { id: string }) {
         </div>
       </nav>
       {algo ? (
-        <Workbench key={algo.id} algo={algo} />
+        <Workbench key={algo.id} algo={algo} query={query} />
       ) : (
         <article className="workbench">
           <h1>No such visualizer</h1>
@@ -63,9 +63,11 @@ export function VisualizerPage({ id }: { id: string }) {
   );
 }
 
-function Workbench({ algo }: { algo: Algo }) {
-  const [draft, setDraft] = useState(() => defaults(algo));
-  const [applied, setApplied] = useState(() => defaults(algo));
+function Workbench({ algo, query }: { algo: Algo; query: string }) {
+  // The URL holds the applied input, so the address bar is always a share link and Back undoes an apply.
+  const applied = useMemo(() => inputFromQuery(algo, query), [algo, query]);
+  const [draft, setDraft] = useState(applied);
+  useEffect(() => setDraft(applied), [applied]);
   const result = useMemo(() => compute(algo, applied), [algo, applied]);
   // Keep showing the last good run while the new input has an error.
   const [lastGood, setLastGood] = useState<Frame[]>(() => ('frames' in result ? result.frames : []));
@@ -76,6 +78,22 @@ function Workbench({ algo }: { algo: Algo }) {
   const player = usePlayer(frames);
   const { frame, toggle, go, i, lastIndex, speed } = player;
   const pattern = patternById(algo.pattern);
+
+  // A link's ?step=N opens at that step; this runs after usePlayer rewinds for the new frames.
+  useEffect(() => {
+    go(stepFromQuery(query));
+  }, [query]); // not on go: only when a new link is opened
+  const [copied, setCopied] = useState('');
+  useEffect(() => setCopied(''), [i, applied]);
+  const copyLink = async () => {
+    const url = location.href.split('#')[0] + href.viz(algo.id, [inputQuery(algo, applied), i ? `step=${i + 1}` : ''].filter(Boolean).join('&'));
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(`Link to step ${i + 1} copied.`);
+    } catch {
+      setCopied(url); // clipboard blocked: show the link so it can be copied by hand
+    }
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -106,13 +124,19 @@ function Workbench({ algo }: { algo: Algo }) {
     return () => removeEventListener('keydown', onKey);
   }, [toggle, go, i, lastIndex, speed]);
 
+  const show = (input: Record<string, string>) => {
+    const next = href.viz(algo.id, inputQuery(algo, input));
+    // The same input again only rewinds, as there is no new URL to trigger a run.
+    if (next === location.hash) go(0);
+    else navigate(next);
+  };
   const run = (e: React.FormEvent) => {
     e.preventDefault();
-    setApplied({ ...draft });
+    show(draft);
   };
   const reset = () => {
     setDraft(defaults(algo));
-    setApplied(defaults(algo));
+    show(defaults(algo));
   };
   const error = 'error' in result ? result.error : null;
 
@@ -158,6 +182,12 @@ function Workbench({ algo }: { algo: Algo }) {
         <div className="input-actions">
           <button type="submit" className="btn primary">Visualize</button>
           <button type="button" className="btn" onClick={reset}>Reset example</button>
+          <button type="button" className="btn" onClick={copyLink} title="Copy a link to this input and step">Copy link</button>
+          <span className="copy-status" role="status">
+            {copied.startsWith('http') ? (
+              <>Copy this link: <input readOnly value={copied} aria-label="Link to this input and step" onFocus={(e) => e.target.select()} /></>
+            ) : copied}
+          </span>
         </div>
         {error && (
           <p id="input-error" className="input-error" role="alert">{error}</p>

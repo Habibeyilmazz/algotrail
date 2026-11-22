@@ -83,6 +83,39 @@ try {
     assert.equal(await page.locator('.viz-list a').count(), 18, 'the list stays so a wrong link has a way out');
   });
 
+  await step('visualizer input and step travel in a link; Back undoes an apply', async () => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto(`${BASE}#/visualize/binary-search`);
+    await page.getByLabel('Sorted numbers').fill('3 6 9 12 15');
+    await page.getByLabel('Target').fill('12');
+    await page.getByRole('button', { name: 'Visualize' }).click();
+    assert.equal(new URL(page.url()).hash, '#/visualize/binary-search?a=3+6+9+12+15&target=12');
+    assert.equal(await page.getByLabel('Sorted numbers').evaluate((el) => el === document.activeElement || el.form.contains(document.activeElement)), true, 'focus stays in the form');
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await page.getByRole('button', { name: 'Copy link' }).click();
+    await page.getByText('Link to step 3 copied.').waitFor();
+    const link = await page.evaluate(() => navigator.clipboard.readText());
+    assert.equal(link, `${BASE}#/visualize/binary-search?a=3+6+9+12+15&target=12&step=3`);
+
+    const other = await browser.newPage(); // a fresh profile, like another device
+    await other.goto(link);
+    assert.equal(await other.getByLabel('Sorted numbers').inputValue(), '3 6 9 12 15');
+    assert.equal(await other.locator('.step-count').innerText(), await count());
+    assert.match(await count(), /^3\//);
+    // A hand-edited link with bad input says what is wrong, like typed input.
+    await other.goto(`${BASE}#/visualize/binary-search?a=1+2+x&junk=%3Cscript%3E`);
+    assert.match(await other.getByRole('alert').innerText(), /"x" is not a whole number/);
+    await other.close();
+
+    await page.goBack();
+    assert.equal(new URL(page.url()).hash, '#/visualize/binary-search');
+    assert.equal(await page.getByLabel('Target').inputValue(), '42');
+    await page.keyboard.press('v'); // V on a visualizer keeps its input
+    assert.equal(new URL(page.url()).hash, '#/visualize/binary-search');
+  });
+
   await step('a correct drill solution passes and is saved', async () => {
     await page.goto(`${BASE}#/drills/floor-sqrt`);
     await page.getByRole('button', { name: 'Show a hint' }).click();
