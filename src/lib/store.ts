@@ -22,6 +22,8 @@ export interface Progress {
 
 export const KEY = 'algotrail:v1';
 export const SPEEDS = [0.25, 0.5, 1, 2, 4];
+/** Drafts this long are neither stored nor loaded: one huge paste could fill localStorage and stop every save. */
+export const MAX_CODE = 50_000;
 
 export const emptyProgress = (): Progress => ({ drills: {}, cards: {}, theme: 'system', speed: 1 });
 
@@ -41,7 +43,7 @@ export function sanitize(raw: unknown): Progress {
         hints: num(d.hints, 0, 10) ? Math.floor(d.hints as number) : 0,
         revealed: d.revealed === true,
         attempts: num(d.attempts, 0, 1e6) ? Math.floor(d.attempts as number) : 0,
-        ...(typeof d.code === 'string' && d.code.length < 50_000 ? { code: d.code } : {}),
+        ...(typeof d.code === 'string' && d.code.length < MAX_CODE ? { code: d.code } : {}),
       };
     }
   }
@@ -110,6 +112,10 @@ export function update(fn: (draft: Progress) => Progress) {
 }
 
 export function updateDrill(id: string, patch: Partial<DrillState>) {
+  if (patch.code !== undefined && patch.code.length >= MAX_CODE) {
+    const { code: _, ...rest } = patch; // keep the last draft that fits
+    patch = rest;
+  }
   update((s) => {
     const prev = s.drills[id] ?? { solved: false, hints: 0, revealed: false, attempts: 0 };
     return { ...s, drills: { ...s.drills, [id]: { ...prev, ...patch } } };

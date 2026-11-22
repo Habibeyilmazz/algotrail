@@ -151,6 +151,19 @@ try {
     assert.match(await page.getByLabel('Code for Rotated log').inputValue(), /^function rotatedMin\(a\) \{\n  \n\}/);
   });
 
+  await step('a huge paste does not stop the rest of progress from saving', async () => {
+    await page.goto(`${BASE}#/drills/rotated-minimum`);
+    const editor = page.getByLabel('Code for Rotated log');
+    await editor.fill('function rotatedMin(a) { return 1; }');
+    await editor.blur();
+    await editor.fill('// ' + 'x'.repeat(6_000_000)); // more than localStorage holds
+    await page.getByText(/not saved/).waitFor();
+    await page.getByRole('button', { name: 'Show a hint' }).click();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).drills['rotated-minimum']);
+    assert.equal(saved.hints, 1);
+    assert.equal(saved.code, 'function rotatedMin(a) { return 1; }', 'the last draft that fits is kept');
+  });
+
   await step('erasing progress right after typing does not bring the draft back', async () => {
     await page.goto(`${BASE}#/drills/rotated-minimum`);
     await page.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 7; }');
@@ -267,7 +280,7 @@ try {
     await phone.close();
   });
 
-  assert.deepEqual(errors, [], 'console errors');
+  assert.deepEqual(errors, [], `console errors: ${errors.join('\n')}`);
   console.log(`\n${steps.length} e2e steps passed`);
 } catch (e) {
   console.error(e);

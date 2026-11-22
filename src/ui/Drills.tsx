@@ -7,7 +7,7 @@ import { runInWorker, TIME_LIMIT_MS, type RunOutcome } from '../drills/runInWork
 import type { Problem } from '../drills/types';
 import { href } from '../lib/router';
 import { describeDue, newCard } from '../lib/srs';
-import { getProgress as progressNow, update, updateDrill, useProgress } from '../lib/store';
+import { getProgress as progressNow, MAX_CODE, update, updateDrill, useProgress } from '../lib/store';
 import { CodeEditor } from './CodeEditor';
 import { ignoreKey } from './keys';
 
@@ -275,6 +275,11 @@ function Drill({ problem: p }: { problem: Problem }) {
         <p id="editor-help" className="muted small-print">
           Tab indents. Press Esc, then Tab, to leave the editor. Tests run in a worker and stop after {TIME_LIMIT_MS / 1000} s.
         </p>
+        {code.length >= MAX_CODE && (
+          <p className="small-print input-error" role="status">
+            This draft is {code.length.toLocaleString()} characters, so it is not saved. Drafts under {MAX_CODE.toLocaleString()} are.
+          </p>
+        )}
 
         <div className="results" ref={resultsRef} tabIndex={-1} aria-live="polite">
           {outcome?.kind === 'compile-error' && (
