@@ -371,6 +371,24 @@ try {
     await p.close();
   });
 
+  await step('steps animate once GSAP arrives; reduced motion never downloads it', async () => {
+    for (const reducedMotion of ['no-preference', 'reduce']) {
+      const ctx = await browser.newContext({ reducedMotion });
+      const p = await ctx.newPage();
+      const gsapRequested = p.waitForRequest(/gsap-/, { timeout: 3000 }).then(() => true, () => false);
+      p.on('pageerror', (e) => errors.push(e.message));
+      await p.goto(`${BASE}#/visualize/quick-sort`);
+      let moved = false;
+      for (let i = 0; i < 40 && !moved; i++) {
+        await p.keyboard.press('ArrowRight');
+        moved = await p.evaluate(() => [...document.querySelectorAll('[data-flip]')].some((e) => /translate\((?!0px, 0px)/.test(e.style.transform)));
+      }
+      assert.equal(await gsapRequested, reducedMotion === 'no-preference', `GSAP requested (${reducedMotion})`);
+      assert.equal(moved, reducedMotion === 'no-preference', `a swap animates (${reducedMotion})`);
+      await ctx.close();
+    }
+  });
+
   await step('the content security policy blocks injected inline scripts', async () => {
     const before = errors.length;
     const blocked = await page.evaluate(

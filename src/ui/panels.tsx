@@ -1,7 +1,11 @@
-import gsap from 'gsap';
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import type { ArrayPanel, GraphPanel, GridPanel, ListPanel, Panel, Tone, TreePanel } from '../algos/types';
 import { layoutCircle, layoutForest } from '../lib/layout';
+
+// GSAP loads after the first render instead of with the page: the first frame of a run never animates
+// (nothing has moved yet), and a step taken before it arrives simply snaps into place.
+let gsap: typeof import('gsap').default | undefined;
+const loadGsap = () => import('gsap').then((m) => (gsap = m.default));
 
 export const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -18,13 +22,14 @@ function useFlip(ref: RefObject<HTMLElement | SVGSVGElement | null>, duration: n
     const els = root.querySelectorAll<HTMLElement | SVGGElement>('[data-flip]');
     const animate = !reducedMotion() && duration > 0;
     const next = new Map<string, DOMRect>();
+    if (animate && !gsap) loadGsap();
     els.forEach((el) => {
-      gsap.killTweensOf(el);
-      gsap.set(el, { x: 0, y: 0 });
+      gsap?.killTweensOf(el);
+      gsap?.set(el, { x: 0, y: 0 });
       const rect = el.getBoundingClientRect();
       next.set(el.dataset.flip!, rect);
       const prev = last.current.get(el.dataset.flip!);
-      if (!animate || !prev) return;
+      if (!animate || !prev || !gsap) return;
       const dx = prev.left - rect.left;
       const dy = prev.top - rect.top;
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
