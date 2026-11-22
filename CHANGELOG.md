@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Security pass (round 3)
+
+Reviewed by hand plus a Codex second opinion (the security-review skill could not run in this session). Problems were reproduced with Playwright against the built app before fixing.
+
+- **Fixed: drill code could blank the page, fake a pass, or hang the tab.** User code shares the worker with the reporting code, so it could post its own messages. `self.postMessage({ type: "case", result: null })` crashed React (white page); posting `ok: true` cases and `done` marked the drill solved and added the pattern to review; returning or logging a 30M-character string put 180 MB of text in the DOM. Now the worker gets only the arguments and posts back raw return values. The page (`judge` in `src/drills/runner.ts`) rebuilds each message field by field, ignores bad or duplicate indexes, decides pass or fail against expected answers the worker never sees, and clips text to 2,000 characters. A return value that cannot be cloned (a function) counts as a wrong answer instead of breaking the run. Regression tests: `judge` unit tests in `drills.test.ts` (including arrays whose own `slice` is shadowed, found by Codex) and an e2e step that tries all three attacks.
+- **Added: a Content-Security-Policy meta tag in the build** (`vite.config.ts`, build only because the dev server needs inline scripts). It blocks inline and third-party scripts, plugins and `<base>` hijacking. `'unsafe-eval'` stays because some browsers apply the page policy to the drill worker. An e2e step checks that an injected inline script is blocked. This is defense in depth: no HTML-injection sink was found (React escapes all text, no `innerHTML`).
+- **Checked, no change needed:** visualizer input is validated with size caps in `src/algos/parse.ts` and never read from the URL; hash routes are shown only as escaped text; stored progress is rebuilt field by field on load (including progress from other tabs); `npm audit` reports 0 vulnerabilities; every lockfile entry resolves from registry.npmjs.org; git history has no secrets and one noreply author; both workflows have read-only default permissions, `persist-credentials: false`, and actions pinned to commit SHAs that match their tags (checked with `git ls-remote`). Only the manual Pages job gets `pages: write` and `id-token: write`.
+- **Known limits:** the meta CSP cannot set `frame-ancestors` (static hosts cannot send headers), so the page could be framed; it holds no account or secrets, so clickjacking has little to target. Google Fonts are loaded from Google's servers, which see the visitor's IP address.
+
 ### Design and accessibility pass (round 2)
 
 Checked with real screenshots at 1440, 1280, 1024, 800 and 390 px in both themes, and with axe-core (WCAG 2.2 AA plus best practice) on every page at desktop and phone width. axe now reports nothing on the pages checked.
