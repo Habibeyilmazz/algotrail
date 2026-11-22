@@ -431,6 +431,8 @@ try {
 
   await step('the content security policy blocks injected inline scripts', async () => {
     const before = errors.length;
+    // Firefox logs the blocked script a moment later, so wait for that message before dropping it.
+    const logged = page.waitForEvent('console', { predicate: (m) => /Content.Security.Policy/i.test(m.text()), timeout: 3000 }).catch(() => {});
     const blocked = await page.evaluate(
       () =>
         new Promise((resolve) => {
@@ -442,6 +444,7 @@ try {
         }),
     );
     assert.match(blocked, /^script-src/);
+    await logged;
     // The browser logs the blocked script as a console error; that one is expected.
     errors.splice(before, errors.length - before, ...errors.slice(before).filter((e) => !/Content.Security.Policy/i.test(e)));
   });
@@ -484,6 +487,8 @@ try {
   console.log(`\n${steps.length} e2e steps passed`);
 } catch (e) {
   console.error(e);
+  const pages = browser?.contexts().flatMap((c) => c.pages()) ?? [];
+  for (const p of pages) console.error(`open page ${p.url()}:\n${(await p.locator('body').innerText().catch(() => '')).slice(0, 600)}`);
   process.exitCode = 1;
 } finally {
   await browser?.close();
