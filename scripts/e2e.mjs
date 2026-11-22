@@ -78,6 +78,7 @@ try {
     }
     await page.goto(`${BASE}#/visualize/no-such-algo`);
     await page.getByRole('heading', { name: 'No such visualizer' }).waitFor();
+    assert.equal(await page.locator('.viz-list a').count(), 18, 'the list stays so a wrong link has a way out');
   });
 
   await step('a correct drill solution passes and is saved', async () => {

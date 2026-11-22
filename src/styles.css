@@ -484,6 +484,18 @@ main {
   min-height: 0;
 }
 
+.demo .scrub {
+  flex-basis: 80px;
+}
+
+.overview td {
+  white-space: nowrap;
+}
+
+.overview .watch {
+  white-space: normal;
+}
+
 .demo .arr-cell {
   min-width: 2.2rem;
   height: 2.3rem;
@@ -711,6 +723,8 @@ main {
   flex-wrap: wrap;
   gap: 18px 28px;
   align-items: flex-start;
+  /* Small panels (one array) sit in the middle of the reserved space instead of leaving a gap below. */
+  align-content: center;
   min-height: 180px;
 }
 
@@ -1041,9 +1055,13 @@ main {
   background: color-mix(in srgb, var(--done) 42%, var(--surface));
 }
 
+/* Ruled out: faded by a dashed outline and no fill, but the value stays readable (4.5:1). */
 .tone-muted.arr-cell,
 .tone-muted.grid-cell {
-  opacity: 0.32;
+  color: var(--muted);
+  background: transparent;
+  border-style: dashed;
+  font-weight: 400;
 }
 
 .tone-bad.arr-cell,
@@ -1579,6 +1597,13 @@ main {
   overflow-wrap: anywhere;
 }
 
+.logs-h {
+  grid-column: 2;
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
 .logs {
   grid-column: 2;
   margin: 4px 0 0;
@@ -1692,6 +1717,10 @@ main {
 
 .help th {
   white-space: nowrap;
+}
+
+.help kbd + kbd {
+  margin-left: 4px;
 }
 
 /* ---------- small screens ---------- */

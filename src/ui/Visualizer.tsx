@@ -3,7 +3,6 @@ import { ALGOS, algoById, defaults } from '../algos';
 import { InputError, type Algo, type Frame } from '../algos/types';
 import { patternById } from '../drills/patterns';
 import { href } from '../lib/router';
-import { NotFound } from './Drills';
 import { Pseudocode, setSpeed, Stage, Transport, usePlayer, Vars } from './Player';
 import { ignoreKey } from './keys';
 
@@ -21,13 +20,13 @@ function compute(algo: Algo, input: Record<string, string>): { frames: Frame[] }
 export function VisualizerPage({ id }: { id: string }) {
   // A bare #/visualize opens the first algorithm; a mistyped id says so instead of silently showing another one.
   const algo = id ? algoById(id) : ALGOS[0];
-  if (!algo) return <NotFound what="visualizer" />;
   return (
     <div className="viz-layout">
       <nav className="viz-nav" aria-label="Algorithms">
         <label className="viz-select">
           <span className="sr-only">Choose an algorithm</span>
-          <select value={algo.id} onChange={(e) => (location.hash = href.viz(e.target.value))}>
+          <select value={algo?.id ?? ''} onChange={(e) => (location.hash = href.viz(e.target.value))}>
+            {!algo && <option value="" disabled>Choose an algorithm</option>}
             {GROUPS.map((g) => (
               <optgroup key={g} label={g}>
                 {ALGOS.filter((a) => a.group === g).map((a) => (
@@ -44,7 +43,7 @@ export function VisualizerPage({ id }: { id: string }) {
               <ul>
                 {ALGOS.filter((a) => a.group === g).map((a) => (
                   <li key={a.id}>
-                    <a href={href.viz(a.id)} aria-current={a.id === algo.id ? 'page' : undefined}>{a.title}</a>
+                    <a href={href.viz(a.id)} aria-current={a.id === algo?.id ? 'page' : undefined}>{a.title}</a>
                   </li>
                 ))}
               </ul>
@@ -52,7 +51,14 @@ export function VisualizerPage({ id }: { id: string }) {
           ))}
         </div>
       </nav>
-      <Workbench key={algo.id} algo={algo} />
+      {algo ? (
+        <Workbench key={algo.id} algo={algo} />
+      ) : (
+        <article className="workbench">
+          <h1>No such visualizer</h1>
+          <p className="lede">This link names an algorithm that does not exist. Pick one from the list.</p>
+        </article>
+      )}
     </div>
   );
 }
@@ -159,12 +165,12 @@ function Workbench({ algo }: { algo: Algo }) {
             <p className="note" aria-live="polite">{frame.note}</p>
             <Transport player={player} />
           </section>
-          <aside className="side">
+          <div className="side">
             <h2 className="side-h">Pseudocode</h2>
             <Pseudocode algo={algo} line={frame.line} />
             <h2 className="side-h">Variables</h2>
             <Vars vars={frame.vars} />
-          </aside>
+          </div>
         </div>
       )}
     </article>

@@ -312,7 +312,12 @@ function Drill({ problem: p }: { problem: Problem }) {
                           )}
                         </dl>
                       )}
-                      {r && r.logs.length > 0 && <pre className="logs">{r.logs.join('\n')}</pre>}
+                      {r && r.logs.length > 0 && (
+                        <>
+                          <p className="logs-h">console.log</p>
+                          <pre className="logs">{r.logs.join('\n')}</pre>
+                        </>
+                      )}
                     </li>
                   );
                 })}

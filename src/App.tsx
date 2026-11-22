@@ -28,18 +28,22 @@ function page(route: Route) {
   }
 }
 
+// Keys are space-separated; the words "or" and "then" are shown as plain text between them.
 const SHORTCUTS: [string, string][] = [
-  ['V  D  R', 'Go to Visualize, Drills, Review'],
+  ['V D R', 'Go to Visualize, Drills, Review'],
   ['T', 'Switch theme'],
   ['?', 'Show this list'],
   ['Space or K', 'Play or pause'],
   ['← → or J L', 'Step back or forward'],
-  ['Home  End', 'First or last step'],
-  ['−  +', 'Slower or faster'],
+  ['Home End', 'First or last step'],
+  ['− +', 'Slower or faster'],
   ['H', 'Next hint (drill page)'],
   ['⌘/Ctrl Enter', 'Run tests, or apply visualizer input'],
-  ['Space, then 1-4', 'Reveal a review card, then grade it'],
+  ['Space then 1-4', 'Reveal a review card, then grade it'],
 ];
+
+const keyCaps = (keys: string) =>
+  keys.split(' ').map((k, n) => (k === 'or' || k === 'then' ? <span key={n} className="muted"> {k} </span> : <kbd key={n}>{k}</kbd>));
 
 export function App() {
   const route = useRoute();
@@ -147,7 +151,7 @@ export function App() {
           <tbody>
             {SHORTCUTS.map(([k, what]) => (
               <tr key={k}>
-                <th scope="row"><kbd>{k}</kbd></th>
+                <th scope="row">{keyCaps(k)}</th>
                 <td>{what}</td>
               </tr>
             ))}
