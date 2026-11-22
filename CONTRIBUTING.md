@@ -4,7 +4,7 @@ Thanks for looking. Bug reports, new drills and new visualizers are all welcome.
 
 ## Set up
 
-Needs Node.js 20.19 or newer (CI uses 22).
+Needs Node.js 22.12 or newer (the test runner, Vitest 5, requires it; CI uses 22).
 
 ```sh
 npm ci

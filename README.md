@@ -12,7 +12,7 @@ Reading about Dijkstra is not the same as watching the heap settle each node, an
 
 ## Quickstart
 
-There is no hosted copy yet, so run it locally. Needs Node.js 20.19 or newer (CI uses 22).
+There is no hosted copy yet, so run it locally. Needs Node.js 22.12 or newer (the test runner, Vitest 5, requires it; CI uses 22).
 
 ```sh
 git clone https://github.com/Habibeyilmazz/algotrail.git
@@ -29,11 +29,12 @@ Other scripts:
 npm test           # unit tests (vitest): algorithms, input fuzzing, every reference solution, runner, SM-2, storage
 npm run typecheck  # tsc
 npm run build      # static site in dist/
-npm run e2e        # builds, then runs 22 user journeys in Playwright (Chromium) against dist/ on port 4202
+npm run preview    # serves dist/ at http://localhost:4201
+npm run e2e        # builds, then runs 25 user journeys in Playwright (Chromium) against dist/ on port 4202
                    # (first time only: npx playwright install chromium)
 ```
 
-There is no backend. `dist/` is a static site that works from any folder, including GitHub Pages.
+There is no backend. `dist/` is a static site that works from any path on any static host, including GitHub Pages. It needs to be served over HTTP: opened straight from disk (`file://`), browsers block its module scripts and the page stays blank.
 
 ## Features
 
