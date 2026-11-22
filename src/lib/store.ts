@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { PATTERNS } from '../drills/patterns';
+import { problemById } from '../drills/problems';
 import type { Card } from './srs';
 
 // All progress lives in one localStorage key. Whatever comes back from storage
@@ -37,7 +38,7 @@ export function sanitize(raw: unknown): Progress {
   if (typeof raw.speed === 'number' && SPEEDS.includes(raw.speed)) out.speed = raw.speed;
   if (isObj(raw.drills)) {
     for (const [id, d] of Object.entries(raw.drills)) {
-      if (!isObj(d) || id.length > 64) continue;
+      if (!isObj(d) || !problemById(id)) continue; // a removed drill would still count as solved
       out.drills[id] = {
         solved: d.solved === true,
         hints: num(d.hints, 0, 10) ? Math.floor(d.hints as number) : 0,

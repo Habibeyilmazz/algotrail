@@ -48,16 +48,16 @@ describe('SM-2', () => {
 
 describe('progress sanitizer', () => {
   it('keeps valid data', () => {
-    const p = sanitize({ theme: 'dark', speed: 2, drills: { a: { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
-    expect(p).toEqual({ theme: 'dark', speed: 2, drills: { a: { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
+    const p = sanitize({ theme: 'dark', speed: 2, drills: { 'floor-sqrt': { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
+    expect(p).toEqual({ theme: 'dark', speed: 2, drills: { 'floor-sqrt': { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
   });
 
   it('drops or repairs junk', () => {
     expect(sanitize('nope')).toEqual({ drills: {}, cards: {}, theme: 'system', speed: 1 });
-    const p = sanitize({ theme: 'neon', speed: 3, drills: { a: { solved: 'yes', hints: -4, code: 7 }, b: 5 }, cards: { c: { ease: 99 } } });
+    const p = sanitize({ theme: 'neon', speed: 3, drills: { 'floor-sqrt': { solved: 'yes', hints: -4, code: 7 }, 'pair-budget': 5 }, cards: { c: { ease: 99 } } });
     expect(p.theme).toBe('system');
     expect(p.speed).toBe(1);
-    expect(p.drills).toEqual({ a: { solved: false, hints: 0, revealed: false, attempts: 0 } });
+    expect(p.drills).toEqual({ 'floor-sqrt': { solved: false, hints: 0, revealed: false, attempts: 0 } });
     expect(p.cards).toEqual({});
   });
 
@@ -65,13 +65,18 @@ describe('progress sanitizer', () => {
     const p = sanitize({ cards: { gone: { ease: 2.5, interval: 1, reps: 1, due: 5 }, heap: { ease: 2.5, interval: 0, reps: 0.5, due: 0 }, trie: { ease: 2.5, interval: 1, reps: 1, due: 0 } } });
     expect(Object.keys(p.cards)).toEqual(['trie']);
   });
+
+  it('drops drills that do not exist, so they are not counted as solved', () => {
+    const p = sanitize({ drills: { gone: { solved: true }, 'floor-sqrt': { solved: true } } });
+    expect(Object.keys(p.drills)).toEqual(['floor-sqrt']);
+  });
 });
 
 describe('progress backups', () => {
   const p: Progress = {
     theme: 'dark',
     speed: 2,
-    drills: { 'floor-sqrt': { solved: true, hints: 1, revealed: false, attempts: 2, code: 'function floorSqrt(n) {}' }, 'pair-for-budget': { solved: false, hints: 0, revealed: false, attempts: 1 } },
+    drills: { 'floor-sqrt': { solved: true, hints: 1, revealed: false, attempts: 2, code: 'function floorSqrt(n) {}' }, 'pair-budget': { solved: false, hints: 0, revealed: false, attempts: 1 } },
     cards: { heap: { ease: 2.5, interval: 6, reps: 2, due: 1_800_000_000_000 } },
   };
 
@@ -90,8 +95,8 @@ describe('progress backups', () => {
   });
 
   it('cleans what is inside a backup like stored progress', () => {
-    const text = JSON.stringify({ app: 'algotrail', version: 1, exportedAt: 'whenever', progress: { theme: 'neon', drills: { a: { solved: 1 } }, cards: { gone: {} } } });
-    expect(parseBackup(text)).toEqual({ progress: { ...emptyProgress(), drills: { a: { solved: false, hints: 0, revealed: false, attempts: 0 } } }, exportedAt: null });
+    const text = JSON.stringify({ app: 'algotrail', version: 1, exportedAt: 'whenever', progress: { theme: 'neon', drills: { 'floor-sqrt': { solved: 1 } }, cards: { gone: {} } } });
+    expect(parseBackup(text)).toEqual({ progress: { ...emptyProgress(), drills: { 'floor-sqrt': { solved: false, hints: 0, revealed: false, attempts: 0 } } }, exportedAt: null });
   });
 
   it('names the file by the local date, not the UTC date', () => {
