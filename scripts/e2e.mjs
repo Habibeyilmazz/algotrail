@@ -300,7 +300,8 @@ try {
   });
 
   await step('review grades a due card and reschedules it', async () => {
-    await page.goto(`${BASE}#/review`);
+    // Set the hash from the page: after a reload, WebKit's page.goto to another fragment changed the URL without a hashchange.
+    await page.evaluate(() => (location.hash = '#/review'));
     await page.getByRole('button', { name: 'Add Two pointers to review' }).click();
     await page.getByRole('heading', { name: 'Two pointers' }).waitFor();
     await page.keyboard.press(' ');
@@ -333,7 +334,9 @@ try {
     assert.deepEqual((await stored()).cards, {});
 
     const choose = async (files) => {
-      const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import a backup' }).click()]);
+      const open = () => Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }), page.getByRole('button', { name: 'Import a backup' }).click()]);
+      // Firefox now and then ignores a click that opens a file picker right after a dialog closed; a person would click again.
+      const [chooser] = await open().catch(open);
       await chooser.setFiles(files);
     };
     await choose({ name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"todo": []}') });
@@ -359,7 +362,7 @@ try {
     assert.equal(await page.getByRole('button', { name: 'Add Two pointers to review' }).count(), 0);
 
     // Merge keeps what this browser has and adds what the backup has. Merge is the default button, so Enter picks it.
-    await page.goto(`${BASE}#/review`);
+    await page.evaluate(() => (location.hash = '#/review'));
     await page.getByRole('button', { name: 'Add Heaps to review' }).click();
     await choose(file);
     await dialog.waitFor();
