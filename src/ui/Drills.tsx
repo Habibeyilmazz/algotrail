@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { algoById } from '../algos';
 import { PATTERNS, patternById, type Pattern } from '../drills/patterns';
 import { problemById, problemsFor, starterCode, PROBLEMS } from '../drills/problems';
-import { show } from '../drills/runner';
+import { argsText, deepEqual, parseArgs, show, type CaseResult } from '../drills/runner';
 import { runInWorker, TIME_LIMIT_MS, type RunOutcome } from '../drills/runInWorker';
 import type { Problem } from '../drills/types';
 import { href } from '../lib/router';
@@ -143,7 +143,91 @@ export function DrillPage({ id }: { id: string }) {
 }
 
 function callText(p: Problem, args: unknown[]) {
-  return `${p.fn}(${args.map((a) => show(a)).join(', ')})`;
+  return `${p.fn}(${argsText(args)})`;
+}
+
+/** One case's result from a run, or why there is none. */
+function single(o: RunOutcome): { r: CaseResult } | { problem: string } {
+  if (o.kind === 'compile-error') return { problem: o.message };
+  const r = o.results[0];
+  return r ? { r } : { problem: `Did not finish in ${TIME_LIMIT_MS / 1000} s.` };
+}
+
+function Answer({ side }: { side: { r: CaseResult } | { problem: string } }) {
+  if ('problem' in side) return <span>{side.problem}</span>;
+  return side.r.error ? <span>Threw <code>{side.r.error}</code></span> : <code>{side.r.got}</code>;
+}
+
+// Runs your code and the reference solution on arguments you type; the reference supplies the expected answer.
+// It never marks the drill solved: only the drill's own tests do.
+function OwnInput({ p, code }: { p: Problem; code: string }) {
+  const [text, setText] = useState(() => argsText(p.tests[0].args));
+  const [error, setError] = useState('');
+  const [running, setRunning] = useState(false);
+  const [out, setOut] = useState<{ call: string; mine: RunOutcome; ref: RunOutcome } | null>(null);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (running) return;
+    let args: unknown[];
+    try {
+      args = parseArgs(text, p.params);
+    } catch (err) {
+      setError((err as Error).message);
+      return;
+    }
+    setError('');
+    setRunning(true);
+    const tests = [{ args, expected: undefined }];
+    const [mine, ref] = await Promise.all([runInWorker(code, p.fn, tests), runInWorker(p.solution, p.fn, tests)]);
+    setRunning(false);
+    setOut({ call: callText(p, args), mine, ref });
+  };
+
+  const mine = out && single(out.mine);
+  const ref = out && single(out.ref);
+  const verdict = !mine || !ref
+    ? null
+    : 'problem' in ref || ref.r.error
+      ? { good: false, text: 'The reference solution could not answer this, so the input is probably outside what the problem allows.' }
+      : 'r' in mine && !mine.r.error && 'value' in mine.r && deepEqual(mine.r.value, ref.r.value)
+        ? { good: true, text: 'Same answer as the reference solution.' }
+        : { good: false, text: 'Not the same answer as the reference solution.' };
+
+  return (
+    <details className="own-input">
+      <summary>Try your own input</summary>
+      <form onSubmit={submit}>
+        <label className="field wide">
+          <span>Arguments for <code>{p.fn}({p.params})</code></span>
+          <input value={text} spellCheck={false} autoComplete="off" aria-invalid={!!error} aria-describedby={error ? 'own-error own-help' : 'own-help'} onChange={(e) => setText(e.target.value)} />
+          <small id="own-help">JSON values separated by commas, as in the examples. Your code and the reference solution both run on them; keep to the problem's rules, or the reference answer means little.</small>
+        </label>
+        <button type="submit" className="btn" disabled={running}>{running ? 'Running…' : 'Run on this input'}</button>
+        {error && <p id="own-error" className="input-error" role="alert">{error}</p>}
+      </form>
+      <div aria-live="polite">
+        {out && mine && ref && verdict && (
+          <div className="own-result">
+            <code className="case-call">{out.call}</code>
+            <dl className="case-detail">
+              <dt>Yours</dt>
+              <dd><Answer side={mine} /></dd>
+              <dt>Reference</dt>
+              <dd><Answer side={ref} /></dd>
+            </dl>
+            <p className={`result-summary ${verdict.good ? 'good' : 'bad'}`}>{verdict.text}</p>
+            {'r' in mine && mine.r.logs.length > 0 && (
+              <>
+                <p className="logs-h">console.log</p>
+                <pre className="logs">{mine.r.logs.join('\n')}</pre>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </details>
+  );
 }
 
 function Drill({ problem: p }: { problem: Problem }) {
@@ -293,6 +377,7 @@ function Drill({ problem: p }: { problem: Problem }) {
             This draft is {code.length.toLocaleString()} characters, so it is not saved. Drafts under {MAX_CODE.toLocaleString()} are.
           </p>
         )}
+        <OwnInput p={p} code={code} />
 
         <div className="results" ref={resultsRef} tabIndex={-1} aria-live="polite">
           {outcome?.kind === 'compile-error' && (

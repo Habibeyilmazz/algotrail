@@ -158,6 +158,27 @@ try {
     await page.getByText(/Could not run your code/).waitFor();
   });
 
+  await step('your own input runs beside the reference solution and never marks a drill solved', async () => {
+    await page.goto(`${BASE}#/drills/kth-largest`);
+    await page.getByText('Try your own input').click();
+    const box = page.getByLabel(/Arguments for/);
+    assert.equal(await box.inputValue(), '[9, 4, 7, 1, 8], 2', 'filled with the first example');
+    await box.fill('[1, 2');
+    await box.press('Enter');
+    await page.getByRole('alert').getByText(/JSON values/).waitFor();
+    await page.getByLabel('Code for K-th largest reading').fill('function kthLargest(nums, k) { console.log("len", nums.length); return [...nums].sort((a, b) => b - a)[k - 1]; }');
+    await box.fill('[5, 1, 9, 9], 2');
+    await box.press('Enter');
+    await page.getByText('Same answer as the reference solution.').waitFor();
+    assert.match(await page.locator('.own-result').innerText(), /kthLargest\(\[5, 1, 9, 9\], 2\)[\s\S]*Reference\s+9[\s\S]*len 4/);
+    await page.getByLabel('Code for K-th largest reading').fill('function kthLargest() { while (true) {} }');
+    await page.getByRole('button', { name: 'Run on this input' }).click();
+    await page.getByText('Did not finish in 3 s.').waitFor({ timeout: 8000 });
+    await page.getByText('Not the same answer as the reference solution.').waitFor();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).drills['kth-largest']);
+    assert.ok(!saved?.solved && !saved?.attempts, 'a custom run is not an attempt');
+  });
+
   await step('offline, a run blames the missing runner, not the code', async () => {
     // Firefox would serve the worker from its cache while offline; routing turns the cache off.
     const abort = (route) => route.abort('internetdisconnected');

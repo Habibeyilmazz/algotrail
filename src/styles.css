@@ -1924,3 +1924,47 @@ main {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- your own input (drill page) ---------- */
+
+.own-input {
+  margin: 12px 0 16px;
+  padding: 10px 14px;
+  background: var(--sunk);
+  border-radius: var(--r-md);
+}
+
+.own-input summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.own-input form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+.own-input .field.wide {
+  max-width: none;
+}
+
+.own-input .btn {
+  margin-top: 22px;
+}
+
+.own-result {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.own-result > * {
+  grid-column: 1;
+}
+
+.own-result .result-summary {
+  margin: 8px 0 0;
+}

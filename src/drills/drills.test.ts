@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ALGOS } from '../algos';
 import { PATTERNS } from './patterns';
 import { PROBLEMS, starterCode } from './problems';
-import { compile, deepEqual, judge, runCase, show } from './runner';
+import { compile, deepEqual, argsText, judge, MAX_ARGS_TEXT, parseArgs, runCase, show } from './runner';
 
 describe('problem bank', () => {
   it('has about forty problems with unique ids, three hints and four tests each', () => {
@@ -88,7 +88,7 @@ describe('judge (messages from the worker are untrusted)', () => {
     for (const bad of [null, undefined, 7, 'x', [], {}, { index: -1 }, { index: 2 }, { index: 0.5 }, { index: '0' }]) {
       expect(judge(bad, tests)).toBeNull();
     }
-    expect(judge({ index: 0, value: [1, 2], got: 42, logs: 'nope', error: {}, ms: 'x' }, tests)).toEqual({ index: 0, ok: true, got: '', logs: [], ms: 0 });
+    expect(judge({ index: 0, value: [1, 2], got: 42, logs: 'nope', error: {}, ms: 'x' }, tests)).toEqual({ index: 0, ok: true, value: [1, 2], got: '', logs: [], ms: 0 });
     expect(judge({ index: 0, logs: ['a', 3, null, 'b'] }, tests)?.logs).toEqual(['a', 'b']);
     // Structured clone keeps own properties on arrays, so a posted array can shadow its methods.
     const sneaky = structuredClone({ index: 0, logs: Object.assign(['ok'], { slice: 0, filter: 0, map: 0 }) });
@@ -103,5 +103,31 @@ describe('judge (messages from the worker are untrusted)', () => {
     expect(r.error).toMatch(/more characters\)$/);
     expect(r.logs).toHaveLength(30);
     expect(r.logs.every((l) => l.length < 2100)).toBe(true);
+  });
+});
+
+describe('parseArgs (your own input on the drill page)', () => {
+  it('reads JSON values separated by commas', () => {
+    expect(parseArgs('[3, 1, 2], 2', 'nums, k')).toEqual([[3, 1, 2], 2]);
+    expect(parseArgs(' ["10", "01"] ', 'grid')).toEqual([['10', '01']]);
+    expect(parseArgs('null', 'x')).toEqual([null]);
+  });
+
+  it('refers to the parameters when the count is wrong', () => {
+    expect(() => parseArgs('[1, 2]', 'nums, k')).toThrow('Give 2 arguments (nums, k), not 1.');
+    expect(() => parseArgs('', 'n')).toThrow('Give 1 argument (n), not 0.');
+    expect(() => parseArgs('1, 2', 'n')).toThrow('not 2');
+  });
+
+  it('never evaluates code and refuses what is not JSON', () => {
+    for (const bad of ["'single'", 'undefined', 'NaN', '[1, 2,]', 'alert(1)', '1], [2', '{a: 1}', '() => 1']) {
+      expect(() => parseArgs(bad, 'x'), bad).toThrow(/JSON values/);
+    }
+    expect(() => parseArgs(`"${'x'.repeat(MAX_ARGS_TEXT)}"`, 'x')).toThrow(/under/);
+  });
+
+  it.each(PROBLEMS.map((p) => [p.id, p]))('the first example of %s, as shown, reads back as its arguments', (_, p) => {
+    // The drill page fills the box with this text, so it must parse back to the same arguments.
+    expect(parseArgs(argsText(p.tests[0].args), p.params)).toEqual(p.tests[0].args);
   });
 });

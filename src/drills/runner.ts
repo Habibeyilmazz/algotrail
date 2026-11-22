@@ -5,6 +5,8 @@ import type { TestCase } from './types';
 export interface CaseResult {
   index: number;
   ok: boolean;
+  /** The returned value as the worker sent it: data only, used to compare a custom run with the reference. */
+  value?: unknown;
   got?: string;
   error?: string;
   logs: string[];
@@ -95,10 +97,33 @@ export function judge(msg: unknown, tests: TestCase[]): CaseResult | null {
   return {
     index,
     ok: !error && 'value' in m && deepEqual(m.value, tests[index].expected),
+    ...(!error && 'value' in m ? { value: m.value } : {}),
     got: typeof m.got === 'string' ? clip(m.got) : '',
     ...(error ? { error } : {}),
     // Not m.logs.slice: a cloned array keeps own properties, so `slice` could be anything.
     logs: Array.isArray(m.logs) ? (Array.prototype.slice.call(m.logs, 0, MAX_LOGS) as unknown[]).filter((l): l is string => typeof l === 'string').map(clip) : [],
     ms: typeof m.ms === 'number' ? m.ms : 0,
   };
+}
+
+/** Arguments as written between the parentheses of a call; for JSON data `parseArgs` reads it back. */
+export const argsText = (args: unknown[]) => args.map((a) => show(a)).join(', ');
+
+export const MAX_ARGS_TEXT = 10_000;
+
+/**
+ * Trust boundary: arguments typed on the drill page, written as between the parentheses of a call
+ * (`[1, 2], "ab", 3`). Parsed as JSON, never evaluated, and checked against the parameter count.
+ */
+export function parseArgs(text: string, params: string): unknown[] {
+  if (text.length > MAX_ARGS_TEXT) throw new Error(`Keep the arguments under ${MAX_ARGS_TEXT.toLocaleString('en')} characters.`);
+  let args: unknown[];
+  try {
+    args = JSON.parse(`[${text}]`);
+  } catch {
+    throw new Error('Write the arguments as JSON values separated by commas, like the examples. Strings need double quotes.');
+  }
+  const want = params.split(',').length;
+  if (args.length !== want) throw new Error(`Give ${want} argument${want === 1 ? '' : 's'} (${params}), not ${args.length}.`);
+  return args;
 }
