@@ -177,6 +177,23 @@ try {
     await page.getByRole('heading', { name: 'Pattern drills' }).waitFor();
   });
 
+  await step('the content security policy blocks injected inline scripts', async () => {
+    const before = errors.length;
+    const blocked = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          document.addEventListener('securitypolicyviolation', (e) => resolve(e.violatedDirective), { once: true });
+          const s = document.createElement('script');
+          s.textContent = 'window.__injected = true';
+          document.head.append(s);
+          setTimeout(() => resolve(window.__injected ? 'ran' : 'no event'), 1000);
+        }),
+    );
+    assert.match(blocked, /^script-src/);
+    // The browser logs the blocked script as a console error; that one is expected.
+    errors.splice(before, errors.length - before, ...errors.slice(before).filter((e) => !/Content Security Policy/.test(e)));
+  });
+
   await step('no horizontal scroll at phone width', async () => {
     const phone = await browser.newPage({ viewport: { width: 375, height: 812 } });
     phone.on('pageerror', (e) => errors.push(e.message));
