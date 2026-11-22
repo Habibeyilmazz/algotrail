@@ -126,6 +126,14 @@ describe('parseArgs (your own input on the drill page)', () => {
     expect(() => parseArgs(`"${'x'.repeat(MAX_ARGS_TEXT)}"`, 'x')).toThrow(/under/);
   });
 
+  it('refuses nesting too deep to send to the test runner', () => {
+    // 4,990 levels fit in the size limit, but postMessage threw on them and the run never finished.
+    const deep = (d: number) => '['.repeat(d) + ']'.repeat(d);
+    expect(() => parseArgs(`${deep(4990)}, 1`, 'nums, k')).toThrow('Nest arrays and objects at most 100 levels deep.');
+    expect(() => parseArgs(`{"a": ${deep(100)}}`, 'x')).toThrow(/100 levels/);
+    expect(parseArgs(deep(100), 'x')).toHaveLength(1);
+  });
+
   it.each(PROBLEMS.map((p) => [p.id, p]))('the first example of %s, as shown, reads back as its arguments', (_, p) => {
     // The drill page fills the box with this text, so it must parse back to the same arguments.
     expect(parseArgs(argsText(p.tests[0].args), p.params)).toEqual(p.tests[0].args);

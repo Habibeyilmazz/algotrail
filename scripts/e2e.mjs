@@ -166,6 +166,11 @@ try {
     await box.fill('[1, 2');
     await box.press('Enter');
     await page.getByRole('alert').getByText(/JSON values/).waitFor();
+    // Fits the size limit, but postMessage used to throw on it and leave the button on "Running…" for good.
+    await box.fill(`${'['.repeat(4990)}${']'.repeat(4990)}, 1`);
+    await box.press('Enter');
+    await page.getByRole('alert').getByText(/at most 100 levels deep/).waitFor();
+    assert.equal(await page.getByRole('button', { name: 'Run on this input' }).isEnabled(), true);
     await page.getByLabel('Code for K-th largest reading').fill('function kthLargest(nums, k) { console.log("len", nums.length); return [...nums].sort((a, b) => b - a)[k - 1]; }');
     await box.fill('[5, 1, 9, 9], 2');
     await box.press('Enter');

@@ -125,5 +125,11 @@ export function parseArgs(text: string, params: string): unknown[] {
   }
   const want = params.split(',').length;
   if (args.length !== want) throw new Error(`Give ${want} argument${want === 1 ? '' : 's'} (${params}), not ${args.length}.`);
+  // Deeper values fit under the size limit but make postMessage throw, and the run would never finish.
+  if (args.some((a) => tooDeep(a, MAX_DEPTH))) throw new Error(`Nest arrays and objects at most ${MAX_DEPTH} levels deep.`);
   return args;
 }
+
+const MAX_DEPTH = 100;
+const tooDeep = (v: unknown, left: number): boolean =>
+  typeof v === 'object' && v !== null && (left === 0 || Object.values(v).some((x) => tooDeep(x, left - 1)));
