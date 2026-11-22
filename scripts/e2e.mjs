@@ -530,6 +530,18 @@ try {
       const over = await phone.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       assert.ok(over <= 0, `${route || 'home'} overflows by ${over}px`);
     }
+    // Long unbroken text, echoed in an input error, a log line, a result or an error, wraps instead of widening the page.
+    const long = 'x'.repeat(500);
+    await phone.goto(`${BASE}#/visualize/binary-search?a=${long}`);
+    await phone.getByRole('alert').waitFor();
+    assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'input error overflows');
+    await phone.goto(`${BASE}#/drills/kth-largest`);
+    for (const body of [`console.log("${long}"); return "${long}";`, `throw new Error("${long}");`, `${long}`]) {
+      await phone.getByLabel('Code for K-th largest reading').fill(`function kthLargest() { ${body} }`);
+      await phone.getByRole('button', { name: /Run tests/ }).click();
+      await phone.locator('.result-summary').waitFor();
+      assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, `drill result overflows: ${body.slice(0, 20)}`);
+    }
     // The knapsack table is wider than a phone: focused, the arrow keys scroll it instead of stepping.
     await phone.goto(`${BASE}#/visualize/knapsack`);
     await phone.locator('.grid-table').focus();

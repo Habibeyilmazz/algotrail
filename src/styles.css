@@ -752,6 +752,7 @@ main {
 }
 
 .input-error {
+  overflow-wrap: anywhere; /* errors quote the bad token, which can be long */
   flex-basis: 100%;
   margin: 0;
   color: var(--bad);
@@ -1595,6 +1596,7 @@ main {
 }
 
 .result-summary {
+  overflow-wrap: anywhere; /* a compile error can quote a long unbroken token */
   font-weight: 700;
   padding: 10px 14px;
   border-radius: var(--r-sm);
@@ -1679,6 +1681,7 @@ main {
   font-size: 0.78rem;
   color: var(--muted);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   border-left: 2px solid var(--line);
   padding-left: 8px;
 }
