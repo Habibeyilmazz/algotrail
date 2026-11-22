@@ -112,9 +112,9 @@ export const BUILD_PROBLEMS: Problem[] = [
     fn: 'traceWord',
     params: 'grid, word',
     tests: [
-      { args: [['ABCE', 'SFCS', 'ADEE'], 'ABCCED'], expected: true },
-      { args: [['ABCE', 'SFCS', 'ADEE'], 'SEE'], expected: true },
-      { args: [['ABCE', 'SFCS', 'ADEE'], 'ABCB'], expected: false },
+      { args: [['TRAI', 'OPEL', 'SNOW'], 'TRAIL'], expected: true },
+      { args: [['TRAI', 'OPEL', 'SNOW'], 'SNOW'], expected: true },
+      { args: [['TRAI', 'OPEL', 'SNOW'], 'TRAP'], expected: false },
       { args: [['A'], 'A'], expected: true },
       { args: [['AB'], 'ABA'], expected: false },
     ],
@@ -177,8 +177,8 @@ export const BUILD_PROBLEMS: Problem[] = [
     params: 'coins, amount',
     tests: [
       { args: [[1, 3, 4], 6], expected: 2 },
-      { args: [[2], 3], expected: -1 },
-      { args: [[1], 0], expected: 0 },
+      { args: [[4], 7], expected: -1 },
+      { args: [[3], 0], expected: 0 },
       { args: [[1, 5, 10, 25], 63], expected: 6 },
       { args: [[3, 7], 11], expected: -1 },
       { args: [[3, 7], 13], expected: 3 },
@@ -206,7 +206,7 @@ export const BUILD_PROBLEMS: Problem[] = [
     fn: 'lcsLength',
     params: 'a, b',
     tests: [
-      { args: ['abcde', 'ace'], expected: 3 },
+      { args: ['kitten', 'sitting'], expected: 4 },
       { args: ['abc', 'def'], expected: 0 },
       { args: ['trail', 'trial'], expected: 4 },
       { args: ['', 'abc'], expected: 0 },
@@ -236,7 +236,7 @@ export const BUILD_PROBLEMS: Problem[] = [
     fn: 'bestValue',
     params: 'weights, values, cap',
     tests: [
-      { args: [[1, 3, 4, 5], [1, 4, 5, 7], 7], expected: 9 },
+      { args: [[2, 3, 5, 6], [3, 5, 8, 9], 8], expected: 13 },
       { args: [[5], [10], 4], expected: 0 },
       { args: [[2, 3, 4, 5], [3, 4, 5, 6], 5], expected: 7 },
       { args: [[], [], 10], expected: 0 },
@@ -266,8 +266,8 @@ export const BUILD_PROBLEMS: Problem[] = [
     fn: 'longestRise',
     params: 'a',
     tests: [
-      { args: [[10, 9, 2, 5, 3, 7, 101, 18]], expected: 4 },
-      { args: [[0, 1, 0, 3, 2, 3]], expected: 4 },
+      { args: [[4, 10, 2, 6, 3, 8, 12, 5]], expected: 4 },
+      { args: [[1, 3, 2, 3, 1, 4]], expected: 4 },
       { args: [[7, 7, 7]], expected: 1 },
       { args: [[]], expected: 0 },
     ],
@@ -380,8 +380,8 @@ export const BUILD_PROBLEMS: Problem[] = [
     fn: 'replaceWithRoots',
     params: 'roots, sentence',
     tests: [
-      { args: [['cat', 'bat', 'rat'], 'the cattle was rattled by the battery'], expected: 'the cat was rat by the bat' },
-      { args: [['a', 'b', 'c'], 'aadsfasf absbs bbab cadsfafs'], expected: 'a a b c' },
+      { args: [['trail', 'camp', 'map'], 'trailhead camping maps are campy'], expected: 'trail camp map are camp' },
+      { args: [['x', 'y', 'xy'], 'xylo yak zed xx'], expected: 'x y zed x' },
       { args: [['tr', 'trail'], 'trailhead trees'], expected: 'tr tr' },
       { args: [[], 'keep it'], expected: 'keep it' },
     ],

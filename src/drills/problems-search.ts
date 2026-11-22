@@ -72,13 +72,13 @@ export const SEARCH_PROBLEMS: Problem[] = [
     pattern: 'binary-search',
     title: 'Rotated log',
     prompt: [
-      'A sorted list of distinct readings was rotated: some prefix was cut off and appended to the end, so `[1, 2, 3, 4, 5]` might now be `[3, 4, 5, 1, 2]`.',
+      'A sorted list of distinct readings was rotated: some prefix was cut off and appended to the end, so `[10, 20, 30, 40, 50]` might now be `[40, 50, 10, 20, 30]`.',
       'Return the smallest reading in O(log n) time. The list is never empty.',
     ],
     fn: 'rotatedMin',
     params: 'a',
     tests: [
-      { args: [[3, 4, 5, 1, 2]], expected: 1 },
+      { args: [[6, 8, 9, 2, 4]], expected: 2 },
       { args: [[1, 2, 3]], expected: 1 },
       { args: [[2, 1]], expected: 1 },
       { args: [[7]], expected: 7 },
@@ -111,8 +111,8 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'minLongestDay',
     params: 'segments, days',
     tests: [
-      { args: [[7, 2, 5, 10, 8], 2], expected: 18 },
-      { args: [[1, 2, 3, 4, 5], 2], expected: 9 },
+      { args: [[6, 3, 8, 2, 5, 4], 2], expected: 17 },
+      { args: [[3, 1, 4, 1, 5], 3], expected: 5 },
       { args: [[4, 4, 4], 3], expected: 4 },
       { args: [[4, 4, 4], 1], expected: 12 },
       { args: [[10, 1, 1, 1], 5], expected: 10 },
@@ -153,7 +153,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'pairForBudget',
     params: 'prices, budget',
     tests: [
-      { args: [[2, 7, 11, 15], 9], expected: [0, 1] },
+      { args: [[3, 6, 10, 14], 16], expected: [1, 2] },
       { args: [[1, 3, 4, 6, 8, 11], 10], expected: [2, 3] },
       { args: [[1, 2], 4], expected: [-1, -1] },
       { args: [[-3, 0, 5, 9], 6], expected: [0, 3] },
@@ -250,8 +250,8 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'sortedSquares',
     params: 'a',
     tests: [
-      { args: [[-4, -1, 0, 3, 10]], expected: [0, 1, 9, 16, 100] },
-      { args: [[-7, -3, 2, 3, 11]], expected: [4, 9, 9, 49, 121] },
+      { args: [[-5, -2, 0, 1, 4]], expected: [0, 1, 4, 16, 25] },
+      { args: [[-6, -4, 1, 4, 9]], expected: [1, 16, 16, 36, 81] },
       { args: [[-2, -1]], expected: [1, 4] },
       { args: [[]], expected: [] },
     ],
@@ -279,7 +279,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'maxWindowSum',
     params: 'steps, k',
     tests: [
-      { args: [[1, 4, 2, 10, 2, 3, 1, 0, 20], 4], expected: 24 },
+      { args: [[3, 8, 1, 0, 6, 9, 2, 4], 3], expected: 17 },
       { args: [[5], 1], expected: 5 },
       { args: [[-1, -2, -3], 2], expected: -3 },
       { args: [[3, 3, 3], 3], expected: 9 },
@@ -313,7 +313,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
     params: 's',
     tests: [
       { args: ['abaccc'], expected: 4 },
-      { args: ['eceba'], expected: 3 },
+      { args: ['xyxzz'], expected: 3 },
       { args: ['aaaa'], expected: 4 },
       { args: [''], expected: 0 },
       { args: ['abcabc'], expected: 2 },
@@ -347,8 +347,8 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'shortestAtLeast',
     params: 'nums, target',
     tests: [
-      { args: [[2, 3, 1, 2, 4, 3], 7], expected: 2 },
-      { args: [[1, 4, 4], 4], expected: 1 },
+      { args: [[4, 1, 1, 3, 5, 2], 8], expected: 2 },
+      { args: [[2, 6, 3], 6], expected: 1 },
       { args: [[1, 1, 1], 5], expected: 0 },
       { args: [[5, 1, 3, 5, 10, 7, 4, 9, 2, 8], 15], expected: 2 },
     ],
@@ -378,8 +378,8 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'anagramStarts',
     params: 'text, pattern',
     tests: [
-      { args: ['cbaebabacd', 'abc'], expected: [0, 6] },
-      { args: ['abab', 'ab'], expected: [0, 1, 2] },
+      { args: ['trailtail', 'ail'], expected: [2, 6] },
+      { args: ['aaba', 'ab'], expected: [1, 2] },
       { args: ['a', 'ab'], expected: [] },
       { args: ['xyz', 'zyx'], expected: [0] },
     ],
@@ -415,7 +415,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'countIslands',
     params: 'grid',
     tests: [
-      { args: [['11000', '11000', '00100', '00011']], expected: 3 },
+      { args: [['1100', '0101', '0011', '1000']], expected: 3 },
       { args: [['111', '010', '111']], expected: 1 },
       { args: [['000']], expected: 0 },
       { args: [[]], expected: 0 },
@@ -503,7 +503,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
     fn: 'countGroups',
     params: 'n, trails',
     tests: [
-      { args: [5, [[0, 1], [1, 2], [3, 4]]], expected: 2 },
+      { args: [6, [[0, 2], [2, 4], [1, 5]]], expected: 3 },
       { args: [3, []], expected: 3 },
       { args: [4, [[0, 1], [2, 3], [1, 2]]], expected: 1 },
       { args: [1, []], expected: 1 },
