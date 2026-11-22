@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Design pass (round 10)
+
+Looked at real screenshots of the built app (Home, three visualizers, drill list, a drill with a failing run, a pattern page, Review empty and with a card, the shortcut dialog, keyboard focus, an input error) at 1440, 1280 and 390 px in light and dark. The design held up; the fixes are small and specific.
+
+- **Fixed: wrapped pseudocode lines lost their indent.** A long line inside a loop (Dijkstra's relax step, LCS, knapsack, every line on a phone) wrapped back to the left of the code column, so the continuation looked like a new outer line. Leading spaces are now padding with a 2ch hanging indent (`Pseudocode` in `src/ui/Player.tsx`), so a continuation sits under its own line.
+- **Fixed: an empty "Variables" heading.** Frames without variables (the first LCS step, for example) showed the heading over nothing; they now say "None yet at this step."
+- **Changed: Review with an empty deck** is headed "Your deck is empty" instead of "Nothing due right now", and review cards no longer have extra space under their last line.
+- **Changed:** short code in drill statements no longer breaks mid-expression (`r * r` / `<= n` on a phone). The longest such snippet is 24 characters; a 320 px check on all 43 drills shows no horizontal scroll. On a phone the visualizer's complexity line sits closer to its summary.
+- README screenshots retaken from the built app (`scripts/readme-shots.mjs`).
+- **Reviewed, left alone:** the drill editor is tall on a phone (58% of the screen) so results sit below the fold after a run; the empty-deck card keeps the green "done" stripe.
+- **Still open:** the Firefox tab-close draft step is still skipped; no Firefox is installed on the machine this round ran on, so it was not reproduced. Everything else under round 9's "Still open" stands.
+
 ### First-run review (round 9)
 
 Cloned the repo fresh into an empty folder and followed the README quickstart word for word (`npm ci`, `npm run dev`, then typecheck, unit tests, e2e): everything installed and ran, and a drill ran in the dev server. Then read the whole codebase as a reviewer (by hand, plus the code-review skill); Codex was asked again but its usage limit was still reached.
