@@ -120,7 +120,9 @@ try {
 
     await page.goBack();
     assert.equal(new URL(page.url()).hash, '#/visualize/binary-search');
-    assert.equal(await page.getByLabel('Target').inputValue(), '42');
+    // Some engines fire hashchange a moment after goBack() returns.
+    for (let i = 0; i < 20 && (await page.getByLabel('Target').inputValue()) !== '42'; i++) await page.waitForTimeout(100);
+    assert.equal(await page.getByLabel('Target').inputValue(), '42', 'Back restores the previous input');
     await page.keyboard.press('v'); // V on a visualizer keeps its input
     assert.equal(new URL(page.url()).hash, '#/visualize/binary-search');
   });
@@ -160,7 +162,8 @@ try {
     await page.context().setOffline(true);
     try {
       await page.getByRole('button', { name: /Run tests/ }).click();
-      await page.getByText(/The test runner did not load/).waitFor();
+      await page.getByRole('button', { name: /Run tests/ }).waitFor({ timeout: 25_000 }); // not "Running…"
+      assert.match(await page.locator('.result-summary').innerText(), /The test runner did not load/);
     } finally {
       await page.context().setOffline(false);
     }
