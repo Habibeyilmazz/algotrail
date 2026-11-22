@@ -10,7 +10,15 @@ export type Route =
   | { page: 'review' };
 
 export function parseHash(hash: string): Route {
-  const [a, b] = hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
+  // A malformed escape like "%" would make decodeURIComponent throw and blank the page.
+  const decode = (s: string) => {
+    try {
+      return decodeURIComponent(s);
+    } catch {
+      return s;
+    }
+  };
+  const [a, b] = hash.replace(/^#\/?/, '').split('/').map(decode);
   if (a === 'visualize') return { page: 'viz', id: b ?? '' };
   if (a === 'drills') return b ? { page: 'drill', id: b } : { page: 'drills' };
   if (a === 'patterns' && b) return { page: 'pattern', id: b };

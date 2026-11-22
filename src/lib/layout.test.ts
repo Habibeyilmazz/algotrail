@@ -45,5 +45,6 @@ describe('parseHash', () => {
     expect(parseHash('#/patterns/heap')).toEqual({ page: 'pattern', id: 'heap' });
     expect(parseHash('#/review')).toEqual({ page: 'review' });
     expect(parseHash('#/nowhere')).toEqual({ page: 'home' });
+    expect(parseHash('#/drills/%')).toEqual({ page: 'drill', id: '%' }); // malformed escape must not throw
   });
 });

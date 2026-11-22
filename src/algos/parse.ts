@@ -37,7 +37,7 @@ export interface ParsedGraph {
 }
 
 /** Edges like "A B 4", separated by commas or new lines. Weight defaults to 1. */
-export function parseEdges(raw: string, { weighted = false, maxNodes = 10, maxEdges = 24 } = {}): ParsedGraph {
+export function parseEdges(raw: string, { weighted = false, directed = false, maxNodes = 10, maxEdges = 24 } = {}): ParsedGraph {
   const chunks = raw.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
   if (chunks.length === 0) throw new InputError('Edges: enter at least one edge, like "A B".');
   if (chunks.length > maxEdges) throw new InputError(`Edges: at most ${maxEdges} edges.`);
@@ -54,6 +54,10 @@ export function parseEdges(raw: string, { weighted = false, maxNodes = 10, maxEd
       if (!nodes.includes(id)) nodes.push(id);
     }
     if (from === to) throw new InputError(`Edges: "${chunk}" is a self-loop.`);
+    // Parallel edges would draw on top of each other and share one colour.
+    if (edges.some((e) => (e.from === from && e.to === to) || (!directed && e.from === to && e.to === from))) {
+      throw new InputError(`Edges: ${from}–${to} is listed twice.`);
+    }
     let weight = 1;
     if (w !== undefined) {
       if (!/^\d+$/.test(w) || Number(w) > 99) throw new InputError(`Edges: weight "${w}" must be a whole number 0-99.`);

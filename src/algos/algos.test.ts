@@ -72,6 +72,10 @@ describe('results', () => {
     expect(badges).toMatchObject({ A: '#1', B: '#2', D: '#3', C: '#4', E: '#5', F: '#6', G: '#7' });
   });
 
+  it('topological sort allows opposite edges and names the blocked nodes', () => {
+    expect(last(run('topological-sort', { edges: 'A B, B A, B C' })).note).toMatch(/Only 0 of 3 placed: the rest are on a cycle or wait on one/);
+  });
+
   it('dijkstra computes shortest distances', () => {
     const f = last(run('dijkstra'));
     const d = Object.fromEntries((f.panels[0] as GraphPanel).nodes.map((n) => [n.id, n.badge]));
@@ -129,6 +133,9 @@ describe('input validation', () => {
     ['grid-bfs', { grid: 'S..' }],
     ['dijkstra', { edges: 'A B x' }],
     ['dijkstra', { start: 'Z' }],
+    ['dijkstra', { edges: 'A B 9, A B 1' }],
+    ['graph-bfs', { edges: 'A B, B A' }],
+    ['topological-sort', { edges: 'A B, A B' }],
     ['heap', { ops: 'push 5, shove 3' }],
     ['knapsack', { v: '1 2' }],
     ['n-queens', { n: '12' }],

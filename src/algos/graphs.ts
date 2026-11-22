@@ -260,7 +260,7 @@ export const topoSort: Algo = {
   ],
   inputs: [{ id: 'edges', label: 'Directed edges (before → after)', initial: 'A B, A C, B D, C D, D E, F C, F E', multiline: true, help: '"A B" means A must come before B.' }],
   run(input) {
-    const g = parseEdges(input.edges);
+    const g = parseEdges(input.edges, { directed: true });
     const adj = adjacency(g, true);
     const { frames, push } = recorder();
     const indeg = new Map<string, number>(g.nodes.map((n) => [n, 0]));
@@ -298,7 +298,7 @@ export const topoSort: Algo = {
       }
     }
     const cyclic = order.length < g.nodes.length;
-    snap(6, cyclic ? `Only ${order.length} of ${g.nodes.length} placed: the rest sit on a cycle.` : `Done: ${order.join(' → ')}.`, null);
+    snap(6, cyclic ? `Only ${order.length} of ${g.nodes.length} placed: the rest are on a cycle or wait on one.` : `Done: ${order.join(' → ')}.`, null);
     return frames;
   },
 };
