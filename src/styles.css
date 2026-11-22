@@ -1668,6 +1668,12 @@ main {
   overflow-wrap: anywhere;
 }
 
+.case > .btn {
+  grid-column: 2;
+  justify-self: start;
+  margin-top: 6px;
+}
+
 .logs-h {
   grid-column: 2;
   margin: 4px 0 0;

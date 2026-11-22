@@ -54,7 +54,7 @@ There is no backend. `dist/` is a static site that works from any path on any st
 - Each drill has a three-step hint ladder, a JavaScript editor (Tab indents, Enter keeps the indent, Esc then Tab leaves it; no syntax highlighting), and tests.
 - Tests run in a Web Worker. An infinite loop is stopped after 3 seconds and the page stays responsive. Failures show expected vs got, thrown errors and your `console.log` output.
 - Each drill has a reference solution with its time and space complexity explained.
-- *Try your own input*: type arguments as JSON (`[5, 1, 9, 9], 2`) and run your code and the reference solution side by side on them, to check an edge case you thought of or shrink a failing test. The reference supplies the expected answer, so this works before you have seen it; a custom run never counts as an attempt or a solve. The input stays while the tab is open, so you can leave the drill and come back to it; it is not saved.
+- *Try your own input*: type arguments as JSON (`[5, 1, 9, 9], 2`) and run your code and the reference solution side by side on them, to check an edge case you thought of or shrink a failing test (each failing or unfinished test has a *Try case n as your input* button that copies its arguments into the box). The reference supplies the expected answer, so this works before you have seen it; a custom run never counts as an attempt or a solve. The input stays while the tab is open, so you can leave the drill and come back to it; it is not saved.
 
 **Spaced review**: each pattern is one SM-2 card (signals, core idea, code template). Solving a drill adds its pattern to your deck; you can also add patterns by hand.
 

@@ -188,6 +188,16 @@ try {
     await page.evaluate(() => { location.hash = '#/drills/kth-largest'; });
     await page.getByText('Try your own input').click();
     assert.equal(await page.getByLabel(/Arguments for/).inputValue(), '[5, 1, 9, 9], 2');
+    // A failing test case goes into the box in one click, with the cursor there, ready to shrink and run.
+    await page.getByLabel('Code for K-th largest reading').fill('function kthLargest(nums, k) { return nums[0]; }');
+    await page.getByRole('button', { name: /Run tests/ }).click();
+    const call = await page.locator('.case-fail .case-call').first().innerText();
+    await page.locator('.case-fail').first().getByRole('button', { name: /^Try case \d+ as your input$/ }).click();
+    const box2 = page.getByLabel(/Arguments for/);
+    assert.equal(await box2.inputValue(), call.replace(/^kthLargest\((.*)\)$/s, '$1'));
+    assert.equal(await box2.evaluate((el) => el === document.activeElement && el.closest('details').open), true, 'open and focused');
+    await page.keyboard.press('Enter');
+    await page.getByText('Not the same answer as the reference solution.').waitFor();
   });
 
   await step('offline, a run blames the missing runner, not the code', async () => {

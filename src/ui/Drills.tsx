@@ -163,7 +163,10 @@ const ownInputs = new Map<string, string>();
 
 // Runs your code and the reference solution on arguments you type; the reference supplies the expected answer.
 // It never marks the drill solved: only the drill's own tests do.
-function OwnInput({ p, code }: { p: Problem; code: string }) {
+// `focus` opens the panel and puts the cursor in the box, for "Try case n as your input".
+function OwnInput({ p, code, focus }: { p: Problem; code: string; focus: boolean }) {
+  const field = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (focus) field.current?.focus(); }, []);
   const [text, setText] = useState(() => ownInputs.get(p.id) ?? argsText(p.tests[0].args));
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
@@ -198,12 +201,12 @@ function OwnInput({ p, code }: { p: Problem; code: string }) {
         : { good: false, text: 'Not the same answer as the reference solution.' };
 
   return (
-    <details className="own-input">
+    <details className="own-input" open={focus || undefined}>
       <summary>Try your own input</summary>
       <form onSubmit={submit}>
         <label className="field wide">
           <span>Arguments for <code>{p.fn}({p.params})</code></span>
-          <input value={text} spellCheck={false} autoComplete="off" aria-invalid={!!error} aria-describedby={error ? 'own-error own-help' : 'own-help'} onChange={(e) => { ownInputs.set(p.id, e.target.value); setText(e.target.value); }} />
+          <input ref={field} value={text} spellCheck={false} autoComplete="off" aria-invalid={!!error} aria-describedby={error ? 'own-error own-help' : 'own-help'} onChange={(e) => { ownInputs.set(p.id, e.target.value); setText(e.target.value); }} />
           <small id="own-help">JSON values separated by commas, as in the examples. Your code and the reference solution both run on them; keep to the problem's rules, or the reference answer means little.</small>
         </label>
         <button type="submit" className="btn" disabled={running}>{running ? 'Running…' : 'Run on this input'}</button>
@@ -250,6 +253,13 @@ function Drill({ problem: p }: { problem: Problem }) {
   const edit = (text: string) => {
     setCode(text);
     updateDrill(p.id, { code: text });
+  };
+
+  // A test case copied into Try your own input; the key change remounts the panel with it.
+  const [tried, setTried] = useState(0);
+  const tryCase = (args: unknown[]) => {
+    ownInputs.set(p.id, argsText(args));
+    setTried((n) => n + 1);
   };
 
   const run = async () => {
@@ -359,7 +369,7 @@ function Drill({ problem: p }: { problem: Problem }) {
             This draft is {code.length.toLocaleString()} characters, so it is not saved. Drafts under {MAX_CODE.toLocaleString()} are.
           </p>
         )}
-        <OwnInput p={p} code={code} />
+        <OwnInput key={tried} p={p} code={code} focus={tried > 0} />
 
         <div className="results" ref={resultsRef} tabIndex={-1} aria-live="polite">
           {outcome?.kind === 'compile-error' && (
@@ -404,6 +414,9 @@ function Drill({ problem: p }: { problem: Problem }) {
                           <p className="logs-h">console.log</p>
                           <pre className="logs">{r.logs.join('\n')}</pre>
                         </>
+                      )}
+                      {status !== 'pass' && (
+                        <button type="button" className="btn ghost small" onClick={() => tryCase(t.args)}>Try case {k + 1} as your input</button>
                       )}
                     </li>
                   );
