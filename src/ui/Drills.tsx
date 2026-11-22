@@ -156,7 +156,7 @@ function Drill({ problem: p }: { problem: Problem }) {
   const list = problemsFor(p.pattern);
   const next = list[list.indexOf(p) + 1];
 
-  // Save the draft shortly after typing stops, and whatever is left when leaving the page.
+  // Save the draft shortly after typing stops, when the editor loses focus, and when leaving the page.
   const latest = useRef(code);
   latest.current = code;
   const saved = useRef(state.code ?? starterCode(p));
@@ -270,7 +270,8 @@ function Drill({ problem: p }: { problem: Problem }) {
             </button>
           </div>
         </div>
-        <CodeEditor value={code} onChange={setCode} onRun={run} label={`Code for ${p.title}`} />
+        {/* Saving on blur means a click elsewhere (Export, a link) never misses the last 0.4 s of typing. */}
+        <CodeEditor value={code} onChange={setCode} onRun={run} onBlur={() => save(latest.current)} label={`Code for ${p.title}`} />
         <p id="editor-help" className="muted small-print">
           Tab indents. Press Esc, then Tab, to leave the editor. Tests run in a worker and stop after {TIME_LIMIT_MS / 1000} s.
         </p>
