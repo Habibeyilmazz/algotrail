@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Performance and accessibility pass (round 16)
+
+Started with round 15's gaps: `git push` was refused again by this session's permission system, so main is still ahead of origin (now by 7 commits) and CI, including the Firefox draft fix, has still not run. Then measured the production build (`vite preview`) with Playwright's Chromium: axe-core 4.10 (WCAG 2.2 AA plus best practice) on 9 routes plus a failing drill run with *Try your own input* open and the shortcut dialog, in light and dark at 1280 and 390 px (44 page checks); cold startup; and keystroke cost in the drill editor.
+
+- Baseline: JS 371.10 kB (118.40 kB gzip) at startup plus GSAP 27.44 kB gzip later, CSS 7.29 kB gzip. Time to first rendered player on a cold load: median 54 ms over 5 runs. axe: 2 violations, both the same one below. The startup bundle is mostly `react-dom`; the app's own largest modules are the drill sets (about 23 kB of source each), which `sanitize` needs at startup, so nothing was split.
+- **Fixed: the "Fail" label on a failing test was below 4.5:1 in the light theme** (4.43:1 on the page background; added in round 12, after the last axe pass). The light theme's `--bad` is now `#b83232`, at least 4.8:1 on every light surface; white text on it is 5.8:1. axe now reports nothing on all 44 checks.
+- **Fixed: running *Try your own input* from the keyboard lost focus.** The button was `disabled` while running, which moves focus to the page body, so after each run Tab started over and a screen reader lost its place (checked: focus was on `BODY` after the run). It is now `aria-disabled` and styled the same; `submit` already ignored presses while running. The e2e custom-input step checks that focus stays on the button (27 steps pass in Chromium).
+- **Measured, no change: storing the draft on every keystroke** (round 15). 100 typed characters take 65 ms with no stored drafts, 70 ms with 43 drafts of 2,000 characters, 213 ms at 20,000 and 434 ms at 49,000 (the worst case: every drill at the size cap), so at most about 4.3 ms per key on this machine and no long tasks (over 50 ms). Normal drafts cost well under 1 ms, so the `shortcut:` stays.
+- **Simplify:** looked for dead code and dependencies. Every dependency is used, every CSS class is referenced (some through `tone-${…}`, `case-${…}`, `panel-${…}`, `grade-${…}`), and `tsc --noUnusedLocals --noUnusedParameters` is clean. Ten names are exported but only used in their own file; left alone, as removing `export` changes nothing at runtime.
+- **Still open:** the push (and so CI and the Firefox evidence for round 15). Codex hit its usage limit again; the security-review skill was not run. Only Chromium is installed here, so the focus fix is unchecked in Firefox and WebKit until CI runs. The *Run tests* button is still `disabled` while running; focus moves to the results when the run ends, so it was left. Nothing tried on a real phone.
+
 ### Draft fix and failing-case shortcut (round 15, feature)
 
 Started with the reported gaps, as real bugs come first. Then used a drill the way a learner would: wrote a wrong answer, ran it, and tried to shrink a failing case. That meant retyping the case's arguments into *Try your own input* by hand.
