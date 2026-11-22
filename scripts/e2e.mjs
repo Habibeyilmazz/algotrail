@@ -126,6 +126,16 @@ try {
     assert.match(await page.getByLabel('Code for Rotated log').inputValue(), /^function rotatedMin\(a\) \{\n  \n\}/);
   });
 
+  await step('erasing progress right after typing does not bring the draft back', async () => {
+    await page.goto(`${BASE}#/drills/rotated-minimum`);
+    await page.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 7; }');
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: 'Erase my progress' }).click();
+    await page.waitForTimeout(800); // longer than the 400 ms draft autosave
+    const drills = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).drills);
+    assert.deepEqual(drills, {});
+  });
+
   await step('review grades a due card and reschedules it', async () => {
     await page.goto(`${BASE}#/review`);
     await page.getByRole('button', { name: 'Add Two pointers to review' }).click();

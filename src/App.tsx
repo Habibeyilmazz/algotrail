@@ -131,7 +131,10 @@ export function App() {
             type="button"
             className="link-btn"
             onClick={() => {
-              if (confirm('Erase solved drills, saved code and review schedule from this browser?')) resetProgress();
+              if (!confirm('Erase solved drills, saved code and review schedule from this browser?')) return;
+              resetProgress();
+              // Reload so a pending draft autosave or a test run still in flight cannot write old progress back.
+              location.reload();
             }}
           >
             Erase my progress
