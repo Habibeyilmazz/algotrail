@@ -112,7 +112,10 @@ export function App() {
       return;
     }
     const when = backup.exportedAt ? ` from ${new Date(backup.exportedAt).toLocaleString()}` : '';
-    if (!confirm(`Replace the progress in this browser with the backup${when}?\n\nBackup: ${summarize(backup.progress)}.\nThis browser now: ${summarize(getProgress())}.`)) return;
+    if (!confirm(`Replace the progress in this browser with the backup${when}?\n\nBackup: ${summarize(backup.progress)}.\nThis browser now: ${summarize(getProgress())}.`)) {
+      setDataMsg('Import cancelled. Nothing changed.');
+      return;
+    }
     try {
       localStorage.setItem(KEY, JSON.stringify(backup.progress));
     } catch {

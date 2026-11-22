@@ -113,6 +113,16 @@ try {
     await page.getByText(/Could not run your code/).waitFor();
   });
 
+  await step('offline, a run blames the missing runner, not the code', async () => {
+    await page.context().setOffline(true);
+    try {
+      await page.getByRole('button', { name: /Run tests/ }).click();
+      await page.getByText(/The test runner did not load/).waitFor();
+    } finally {
+      await page.context().setOffline(false);
+    }
+  });
+
   await step('code cannot fake a pass, crash the page or flood it with output', async () => {
     await page.getByLabel('Code for First departure').fill(
       'function firstDeparture() {\n  self.postMessage({ type: "case", result: null });\n' +
@@ -164,6 +174,14 @@ try {
     assert.ok(card.due > Date.now() + 23 * 3600_000);
   });
 
+  await step('a backup includes code typed just before clicking Export', async () => {
+    await page.goto(`${BASE}#/drills/rotated-minimum`);
+    await page.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export a backup' }).click()]);
+    const backup = JSON.parse(readFileSync(await download.path(), 'utf8'));
+    assert.equal(backup.progress.drills['rotated-minimum']?.code, 'function rotatedMin(a) { return 5; }');
+  });
+
   await step('a backup can be exported, erased and imported again', async () => {
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')));
     const before = await stored();
@@ -187,7 +205,7 @@ try {
     // Declining the confirm leaves progress alone.
     page.once('dialog', (d) => d.dismiss());
     await choose(file);
-    await page.waitForTimeout(300);
+    await page.getByRole('status').getByText('Import cancelled. Nothing changed.').waitFor();
     assert.deepEqual((await stored()).cards, {});
 
     page.once('dialog', (d) => {
