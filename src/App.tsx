@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ALGOS } from './algos';
+import { ALGOS, algoById } from './algos';
+import { patternById } from './drills/patterns';
+import { problemById } from './drills/problems';
 import { href, useRoute, type Route } from './lib/router';
 import { isDue } from './lib/srs';
 import { backupFileName, backupText, getProgress, saveFailed, KEY, MAX_BACKUP_CHARS, mergeProgress, parseBackup, type Progress, reloadFromStorage, resetProgress, summarize, update, useProgress } from './lib/store';
@@ -45,6 +47,30 @@ function page(route: Route) {
   }
 }
 
+// Each view gets its own tab title, so tabs, history and the screen reader's page announcement say where you are.
+// Same as <title> in index.html, which crawlers and link previews read before the app runs.
+const HOME_TITLE = 'algotrail · watch algorithms run, then practise them';
+
+export function pageTitle(route: Route) {
+  const name = (() => {
+    switch (route.page) {
+      case 'home':
+        return '';
+      case 'viz':
+        return route.id ? algoById(route.id)?.title ?? 'No such visualizer' : ALGOS[0].title;
+      case 'drills':
+        return 'Drills';
+      case 'drill':
+        return problemById(route.id)?.title ?? 'No such drill';
+      case 'pattern':
+        return patternById(route.id)?.name ?? 'No such pattern';
+      case 'review':
+        return 'Review';
+    }
+  })();
+  return name ? `${name} · algotrail` : HOME_TITLE;
+}
+
 // Keys are space-separated; the words "or" and "then" are shown as plain text between them.
 const SHORTCUTS: [string, string][] = [
   ['V D R', 'Go to Visualize, Drills, Review'],
@@ -75,6 +101,10 @@ export function App() {
     if (theme === 'system') delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    document.title = pageTitle(route);
+  });
 
   // Move focus to the new page so screen readers and keyboards start at the top.
   useEffect(() => {

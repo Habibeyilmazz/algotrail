@@ -7,8 +7,8 @@ import react from '@vitejs/plugin-react';
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  'font-src https://fonts.gstatic.com',
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data:",
   "object-src 'none'",
   "base-uri 'none'",
@@ -18,6 +18,8 @@ const CSP = [
 // Relative base so the build works on GitHub Pages under /algotrail/ and from any folder.
 export default defineConfig({
   base: './',
+  // Fonts stay separate files: inlined into the CSS they would block first paint, and font-src allows only 'self'.
+  build: { assetsInlineLimit: 0 },
   plugins: [
     react(),
     {

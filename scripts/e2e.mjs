@@ -346,6 +346,31 @@ try {
     await page.getByRole('heading', { name: 'Pattern drills' }).waitFor();
   });
 
+  await step('each page has its own title and nothing loads from another origin', async () => {
+    const p = await browser.newPage();
+    const foreign = [];
+    p.on('request', (r) => !r.url().startsWith(BASE) && foreign.push(r.url()));
+    p.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    for (const [route, title] of [
+      ['', 'algotrail · watch algorithms run, then practise them'],
+      ['visualize/dijkstra', "Dijkstra's shortest paths · algotrail"],
+      ['visualize/nope', 'No such visualizer · algotrail'],
+      ['drills', 'Drills · algotrail'],
+      ['drills/grid-toll', 'Toll grid · algotrail'],
+      ['patterns/heap', 'Heaps · algotrail'],
+      ['review', 'Review · algotrail'],
+    ]) {
+      await p.goto(`${BASE}#/${route}`);
+      await p.waitForFunction((t) => document.title === t, title, { timeout: 2000 }).catch(async () => assert.equal(await p.title(), title));
+    }
+    // Self-hosted fonts: the faces the pages use load from this origin, under the CSP.
+    await p.evaluate(() => document.fonts.ready);
+    const faces = await p.evaluate(() => [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family));
+    for (const f of ['Atkinson Hyperlegible', 'Bricolage Grotesque Variable', 'JetBrains Mono']) assert.ok(faces.includes(f), `${f} loaded`);
+    assert.deepEqual(foreign, []);
+    await p.close();
+  });
+
   await step('the content security policy blocks injected inline scripts', async () => {
     const before = errors.length;
     const blocked = await page.evaluate(
