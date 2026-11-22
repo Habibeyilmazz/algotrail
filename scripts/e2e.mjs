@@ -151,6 +151,16 @@ try {
     assert.match(await page.getByLabel('Code for Rotated log').inputValue(), /^function rotatedMin\(a\) \{\n  \n\}/);
   });
 
+  await step('fast typing after Enter and Tab keeps every key in place', async () => {
+    await page.goto(`${BASE}#/drills/rotated-minimum`);
+    const editor = page.getByLabel('Code for Rotated log');
+    await editor.fill('if (a) {');
+    await editor.press('End');
+    // A fast typist: the next key arrives before the browser draws a frame.
+    for (const key of ['Enter', ...'return 1;', 'Enter', 'Tab', 'x']) await editor.press(key, { delay: 5 });
+    assert.equal(await editor.inputValue(), 'if (a) {\n  return 1;\n    x');
+  });
+
   await step('a draft typed just before closing the tab is kept', async () => {
     const ctx = await browser.newContext(); // two tabs sharing one localStorage
     const other = await ctx.newPage();

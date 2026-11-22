@@ -10,13 +10,15 @@ export function CodeEditor({ value, onChange, onRun, onBlur, label }: { value: s
   const trapTab = useRef(true);
   const lines = value.split('\n').length;
 
-  const edit = (el: HTMLTextAreaElement, text: string, start: number, end: number, caret: number) => {
-    // execCommand keeps the browser undo stack working; fall back to a plain value change.
+  const edit = (el: HTMLTextAreaElement, text: string, start: number, end: number) => {
+    // execCommand keeps the browser undo stack working and leaves the caret after the text.
+    // Only the fallback needs the caret put back, after React re-renders: doing it always moved
+    // the caret under a key typed within that frame.
     el.setSelectionRange(start, end);
     if (!document.execCommand?.('insertText', false, text)) {
       onChange(el.value.slice(0, start) + text + el.value.slice(end));
+      requestAnimationFrame(() => el.setSelectionRange(start + text.length, start + text.length));
     }
-    requestAnimationFrame(() => el.setSelectionRange(caret, caret));
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -33,7 +35,7 @@ export function CodeEditor({ value, onChange, onRun, onBlur, label }: { value: s
     }
     if (e.key === 'Tab' && trapTab.current && !e.shiftKey && s === t) {
       e.preventDefault();
-      edit(el, INDENT, s, t, s + INDENT.length);
+      edit(el, INDENT, s, t);
       return;
     }
     if (e.key === 'Enter' && !e.shiftKey && s === t) {
@@ -42,7 +44,7 @@ export function CodeEditor({ value, onChange, onRun, onBlur, label }: { value: s
       const extra = /[{[(]\s*$/.test(v.slice(lineStart, s)) ? INDENT : '';
       if (!indent && !extra) return;
       e.preventDefault();
-      edit(el, '\n' + indent + extra, s, t, s + 1 + indent.length + extra.length);
+      edit(el, '\n' + indent + extra, s, t);
     }
   };
 
