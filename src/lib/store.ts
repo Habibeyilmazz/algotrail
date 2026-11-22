@@ -129,8 +129,8 @@ const listeners = new Set<() => void>();
 
 let reloading = false;
 
-/** Reload so stored progress (just erased or imported) is read fresh. Saves stop first: the tab-close
- * draft save would otherwise write this tab's old progress back during the reload. */
+/** Reload so stored progress (just erased or imported) is read fresh. Saves stop first: a draft save
+ * during the reload would otherwise write this tab's old progress back during the reload. */
 export function reloadFromStorage() {
   reloading = true;
   location.reload();

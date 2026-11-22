@@ -245,36 +245,16 @@ function Drill({ problem: p }: { problem: Problem }) {
   const list = problemsFor(p.pattern);
   const next = list[list.indexOf(p) + 1];
 
-  // Save the draft shortly after typing stops, when the editor loses focus, and when leaving the page.
-  // `latest` is also set on every change, so a save while leaving never waits for React to re-render.
-  const latest = useRef(code);
-  latest.current = code;
-  const saved = useRef(state.code ?? starterCode(p));
-  const save = (text: string) => {
-    if (text === saved.current) return;
-    saved.current = text;
+  // Every edit is stored at once. A save left to pagehide was skipped in about half of Firefox's tab closes.
+  // shortcut: writes all progress per keystroke (about 5 ms with 43 drafts near MAX_CODE); debounce + flush if that ever shows.
+  const edit = (text: string) => {
+    setCode(text);
     updateDrill(p.id, { code: text });
   };
-  useEffect(() => {
-    const t = setTimeout(() => save(code), 400);
-    return () => clearTimeout(t);
-  }, [code]);
-  useEffect(() => {
-    // Closing or hiding the tab gives no blur and no time for the timer above.
-    const flush = () => save(latest.current);
-    addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', flush);
-    return () => {
-      removeEventListener('pagehide', flush);
-      document.removeEventListener('visibilitychange', flush);
-      flush();
-    };
-  }, []);
 
   const run = async () => {
     if (running) return;
     setRunning(true);
-    save(code);
     const result = await runInWorker(code, p.fn, p.tests);
     setRunning(false);
     setOutcome(result);
@@ -364,14 +344,13 @@ function Drill({ problem: p }: { problem: Problem }) {
         <div className="work-bar">
           <h2>Your code</h2>
           <div className="work-actions">
-            <button type="button" className="btn ghost small" onClick={() => (code === starterCode(p) || confirm('Replace your code with the empty starter?')) && setCode(starterCode(p))}>Reset code</button>
+            <button type="button" className="btn ghost small" onClick={() => (code === starterCode(p) || confirm('Replace your code with the empty starter?')) && edit(starterCode(p))}>Reset code</button>
             <button type="button" className="btn primary" onClick={run} disabled={running}>
               {running ? 'Running…' : 'Run tests'} <kbd>⌘/Ctrl ↵</kbd>
             </button>
           </div>
         </div>
-        {/* Saving on blur means a click elsewhere (Export, a link) never misses the last 0.4 s of typing. */}
-        <CodeEditor value={code} onChange={(v) => { latest.current = v; setCode(v); }} onRun={run} onBlur={() => save(latest.current)} label={`Code for ${p.title}`} />
+        <CodeEditor value={code} onChange={edit} onRun={run} label={`Code for ${p.title}`} />
         <p id="editor-help" className="muted small-print">
           Tab indents. Press Esc, then Tab, to leave the editor. Tests run in a worker and stop after {TIME_LIMIT_MS / 1000} s.
         </p>
