@@ -291,34 +291,10 @@ try {
         const key = `probe-save-${Math.random().toString(36).slice(2, 6)}-${++n}`;
         try { set.call(this, k, v); set.call(this, key, note); } catch (e) { set.call(this, key, `${note}, threw ${e}`); throw e; }
       };
-      // Log when pagehide and visibilitychange listeners are added, run, or throw (the app's draft save is one).
-      const add = EventTarget.prototype.addEventListener;
-      const remove = EventTarget.prototype.removeEventListener;
-      const wrapped = new WeakMap();
-      let l = 0;
-      // Console messages from a closing tab do not reach Playwright in Firefox, so the log goes into storage too.
-      const log = (text) => { console.log(`# ${text}`); try { set.call(localStorage, `probe-log-${Math.round(performance.now() * 1000)}-${++l}`, text); } catch {} };
-      EventTarget.prototype.addEventListener = function (type, fn, opts) {
-        if ((type !== 'pagehide' && type !== 'visibilitychange') || typeof fn !== 'function') return add.call(this, type, fn, opts);
-        const tag = `${location.hash} ${type} listener ${l + 1}`;
-        log(`${tag} added at ${Math.round(performance.now())} ms`);
-        const w = function (...a) {
-          log(`${tag} runs at ${Math.round(performance.now())} ms`);
-          try { return fn.apply(this, a); } catch (e) { log(`${tag} threw ${e}`); throw e; }
-        };
-        wrapped.set(fn, w);
-        return add.call(this, type, w, opts);
-      };
-      EventTarget.prototype.removeEventListener = function (type, fn, opts) {
-        if (wrapped.has(fn)) log(`${location.hash} ${type} listener removed`);
-        return remove.call(this, type, wrapped.get(fn) ?? fn, opts);
-      };
     });
-    const notes = [];
     const other = await ctx.newPage();
     await other.goto(`${BASE}#/drills`);
     const p = await ctx.newPage();
-    p.on('console', (m) => m.text().startsWith('# ') && notes.push(m.text().slice(2)));
     await p.goto(`${BASE}#/drills/rotated-minimum`);
     await p.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
     const filled = Date.now();
@@ -340,10 +316,10 @@ try {
     if (BROWSER === 'firefox' && got !== 'function rotatedMin(a) { return 5; }') {
       // In Firefox CI about half the runs lose this draft; not reproduced locally (see CHANGELOG.md). Report what
       // the page did instead of failing, so each CI run adds evidence.
-      console.log(`# known Firefox issue, draft lost. Closed ${gap} ms after typing. Saw: ${probes || 'nothing'}. Log: ${notes.join('; ')}`);
+      console.log(`# known Firefox issue, draft lost. Closed ${gap} ms after typing. Saw: ${probes || 'nothing'}`);
     } else {
       assert.equal(got, 'function rotatedMin(a) { return 5; }', `saw: ${probes || 'nothing'}`);
-      if (BROWSER === 'firefox') console.log(`# Firefox kept the draft. Closed ${gap} ms after typing. Saw: ${probes}. Log: ${notes.join('; ')}`);
+      if (BROWSER === 'firefox') console.log(`# Firefox kept the draft. Closed ${gap} ms after typing. Saw: ${probes}`);
     }
     await ctx.close();
   });
