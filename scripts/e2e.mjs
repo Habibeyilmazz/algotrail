@@ -280,25 +280,37 @@ try {
   });
 
   await step('a draft typed just before closing the tab is kept', async () => {
-    if (BROWSER === 'firefox') {
-      // In Firefox CI about half the runs lost the draft although the editor held it at pagehide; not reproduced
-      // in 45 isolated runs. Left as an open item in CHANGELOG.md rather than retried until it passes.
-      console.log('# skipped in Firefox');
-      return;
-    }
     const ctx = await browser.newContext(); // two tabs sharing one localStorage
     const other = await ctx.newPage();
     await other.goto(`${BASE}#/drills`);
     const p = await ctx.newPage();
     await p.goto(`${BASE}#/drills/rotated-minimum`);
     await p.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
-    await p.evaluate(() => ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => localStorage.setItem(`probe-${t}`, document.querySelector('textarea').value.slice(-6)))));
+    await p.evaluate(() => {
+      ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => localStorage.setItem(`probe-${t}`, document.querySelector('textarea').value.slice(-6))));
+      // Record each save the app makes from here on: during which event, whether it threw, and the draft it held.
+      const set = Storage.prototype.setItem;
+      let n = 0;
+      Storage.prototype.setItem = function (k, v) {
+        if (k !== 'algotrail:v1') return set.call(this, k, v);
+        const note = `${window.event?.type ?? 'no event'}, draft ends ${JSON.parse(v).drills?.['rotated-minimum']?.code?.slice(-6)}`;
+        try { set.call(this, k, v); set.call(this, `probe-save-${++n}`, note); } catch (e) { set.call(this, `probe-save-${++n}`, `${note}, threw ${e}`); throw e; }
+      };
+    });
     await p.close({ runBeforeUnload: true }); // well inside the 400 ms autosave delay, editor still focused
     // Firefox passes a write on to other tabs a moment later.
     const read = () => other.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1') ?? '{}').drills?.['rotated-minimum']?.code);
     for (let i = 0; i < 20 && !(await read()); i++) await other.waitForTimeout(100);
-    const probes = await other.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('probe-')).map((k) => `${k} (editor ends ${localStorage.getItem(k)})`).join(', '));
-    assert.equal(await read(), 'function rotatedMin(a) { return 5; }', `events seen: ${probes || 'none'}`);
+    const probes = await other.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('probe-')).map((k) => `${k} (${localStorage.getItem(k)})`).join(', '));
+    const got = await read();
+    if (BROWSER === 'firefox' && got !== 'function rotatedMin(a) { return 5; }') {
+      // In Firefox CI about half the runs lose this draft; not reproduced locally (see CHANGELOG.md). Report what
+      // the page did instead of failing, so each CI run adds evidence.
+      console.log(`# known Firefox issue, draft lost. Saw: ${probes || 'nothing'}`);
+    } else {
+      assert.equal(got, 'function rotatedMin(a) { return 5; }', `saw: ${probes || 'nothing'}`);
+      if (BROWSER === 'firefox') console.log(`# Firefox kept the draft. Saw: ${probes}`);
+    }
     await ctx.close();
   });
 
