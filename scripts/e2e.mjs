@@ -252,8 +252,8 @@ try {
 
     await pendingReset();
     const progress = { drills: {}, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 0 } }, theme: 'system', speed: 1 };
-    page.once('dialog', (d) => d.accept());
     await page.getByLabel('Backup file to import').setInputFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'algotrail', version: 1, exportedAt: null, progress })) });
+    await page.getByRole('dialog').getByRole('button', { name: 'Replace' }).click();
     await page.getByRole('status').getByText(/^Imported/).waitFor();
     assert.deepEqual(await stored(), progress);
     page.once('dialog', (d) => d.accept());
@@ -302,21 +302,34 @@ try {
     await choose({ name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"todo": []}') });
     await page.getByRole('status').getByText('Nothing imported. This file is not an algotrail progress backup.').waitFor();
 
-    // Declining the confirm leaves progress alone.
-    page.once('dialog', (d) => d.dismiss());
+    // Cancel, or Esc, leaves progress alone.
+    const dialog = page.getByRole('dialog', { name: 'Import this backup?' });
     await choose(file);
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('status').getByText('Import cancelled. Nothing changed.').waitFor();
+    await choose(file);
+    await dialog.waitFor();
+    await page.keyboard.press('Escape');
     await page.getByRole('status').getByText('Import cancelled. Nothing changed.').waitFor();
     assert.deepEqual((await stored()).cards, {});
 
-    page.once('dialog', (d) => {
-      assert.match(d.message(), /Backup: 0 solved drills and 1 pattern in review\.\nThis browser now: 0 solved drills and 0 patterns in review\./);
-      d.accept();
-    });
     await choose(file);
+    assert.match(await dialog.innerText(), /Backup from .*\n*0 solved drills and 1 pattern in review\n*This browser now\n*0 solved drills and 0 patterns in review/);
+    await dialog.getByRole('button', { name: 'Replace' }).click();
     await page.getByRole('status').getByText('Imported 0 solved drills and 1 pattern in review.').waitFor();
     assert.deepEqual(await stored(), before);
     // The restored card is listed in the deck, not offered to add again.
     assert.equal(await page.getByRole('button', { name: 'Add Two pointers to review' }).count(), 0);
+
+    // Merge keeps what this browser has and adds what the backup has. Merge is the default button, so Enter picks it.
+    await page.goto(`${BASE}#/review`);
+    await page.getByRole('button', { name: 'Add Heaps to review' }).click();
+    await choose(file);
+    await dialog.waitFor();
+    await page.keyboard.press('Enter');
+    await page.getByRole('status').getByText('Merged the backup. This browser now has 0 solved drills and 2 patterns in review.').waitFor();
+    assert.deepEqual(Object.keys((await stored()).cards).sort(), ['heap', 'two-pointers']);
+    assert.deepEqual((await stored()).cards['two-pointers'], before.cards['two-pointers']);
   });
 
   await step('theme toggle and shortcut help work from the keyboard', async () => {

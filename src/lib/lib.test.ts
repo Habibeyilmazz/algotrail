@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { describeDue, newCard, review } from './srs';
-import { backupFileName, backupText, emptyProgress, MAX_BACKUP_CHARS, parseBackup, sanitize, summarize, type Progress } from './store';
+import { backupFileName, backupText, emptyProgress, MAX_BACKUP_CHARS, mergeProgress, parseBackup, sanitize, summarize, type Progress } from './store';
 
 const DAY = 86_400_000;
 
@@ -108,6 +108,33 @@ describe('progress backups', () => {
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+
+  it('merges a backup into this browser without losing either side', () => {
+    const here: Progress = {
+      theme: 'light',
+      speed: 1,
+      drills: {
+        'floor-sqrt': { solved: false, hints: 3, revealed: true, attempts: 1, code: 'here' },
+        'pair-budget': { solved: true, hints: 0, revealed: false, attempts: 4 },
+      },
+      cards: { heap: { ease: 2.2, interval: 0, reps: 0, due: 1_000 }, trie: { ease: 2.5, interval: 1, reps: 1, due: 9 } },
+    };
+    const m = mergeProgress(here, p);
+    expect(m.theme).toBe('light');
+    expect(m.speed).toBe(1);
+    expect(m.drills).toEqual({
+      'floor-sqrt': { solved: true, hints: 3, revealed: true, attempts: 2, code: 'here' },
+      'pair-budget': { solved: true, hints: 0, revealed: false, attempts: 4 },
+    });
+    expect(m.cards).toEqual(here.cards); // heap: forgotten here (due sooner) beats the backup's later date
+    // Code missing here comes from the backup; a card only in the backup is added.
+    const m2 = mergeProgress({ ...here, drills: { 'floor-sqrt': { solved: false, hints: 0, revealed: false, attempts: 0 } }, cards: {} }, p);
+    expect(m2.drills['floor-sqrt'].code).toBe('function floorSqrt(n) {}');
+    expect(m2.cards).toEqual(p.cards);
+    // Merging the same file again changes nothing.
+    expect(mergeProgress(m, p)).toEqual(m);
+    expect(summarize(m)).toBe('2 solved drills and 2 patterns in review');
   });
 
   it('summarizes progress for the import prompt', () => {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ALGOS } from './algos';
 import { href, useRoute, type Route } from './lib/router';
 import { isDue } from './lib/srs';
-import { backupFileName, backupText, getProgress, saveFailed, KEY, MAX_BACKUP_CHARS, parseBackup, reloadFromStorage, resetProgress, summarize, update, useProgress } from './lib/store';
+import { backupFileName, backupText, getProgress, saveFailed, KEY, MAX_BACKUP_CHARS, mergeProgress, parseBackup, type Progress, reloadFromStorage, resetProgress, summarize, update, useProgress } from './lib/store';
 import { DrillPage, DrillsPage, PatternPage } from './ui/Drills';
 import { HomePage } from './ui/Home';
 import { ignoreKey } from './ui/keys';
@@ -88,6 +88,11 @@ export function App() {
 
   const fileInput = useRef<HTMLInputElement>(null);
   const [dataMsg, setDataMsg] = useState(takeFlash);
+  const importDlg = useRef<HTMLDialogElement>(null);
+  const [pending, setPending] = useState<ReturnType<typeof parseBackup> | null>(null);
+  useEffect(() => {
+    if (pending) importDlg.current?.showModal();
+  }, [pending]);
 
   const exportBackup = () => {
     const a = document.createElement('a');
@@ -111,18 +116,27 @@ export function App() {
       setDataMsg(`Nothing imported. ${(err as Error).message}`);
       return;
     }
-    const when = backup.exportedAt ? ` from ${new Date(backup.exportedAt).toLocaleString()}` : '';
-    if (!confirm(`Replace the progress in this browser with the backup${when}?\n\nBackup: ${summarize(backup.progress)}.\nThis browser now: ${summarize(getProgress())}.`)) {
+    setPending(backup);
+  };
+
+  // The import dialog's buttons close it with "merge" or "replace"; Esc or Cancel leave an empty returnValue.
+  const finishImport = () => {
+    const choice = importDlg.current!.returnValue;
+    importDlg.current!.returnValue = '';
+    const backup = pending!;
+    setPending(null);
+    if (choice !== 'merge' && choice !== 'replace') {
       setDataMsg('Import cancelled. Nothing changed.');
       return;
     }
+    const next: Progress = choice === 'merge' ? mergeProgress(getProgress(), backup.progress) : backup.progress;
     try {
-      localStorage.setItem(KEY, JSON.stringify(backup.progress));
+      localStorage.setItem(KEY, JSON.stringify(next));
     } catch {
       setDataMsg('Nothing imported. This browser would not save it (storage is full or blocked).');
       return;
     }
-    flash(`Imported ${summarize(backup.progress)}.`);
+    flash(choice === 'merge' ? `Merged the backup. This browser now has ${summarize(next)}.` : `Imported ${summarize(next)}.`);
     // Reload (store.ts loads the saved key) rather than updating in place, for the same reason as erasing:
     // a pending draft save must not overwrite the imported code.
     reloadFromStorage();
@@ -215,6 +229,28 @@ export function App() {
         <input ref={fileInput} type="file" accept=".json,application/json" hidden aria-label="Backup file to import" onChange={importBackup} />
         <p role="status" className="footer-status">{dataMsg}</p>
       </footer>
+      <dialog ref={importDlg} className="help" aria-labelledby="import-h" onClose={finishImport}>
+        {pending && (
+          <form method="dialog">
+            <h2 id="import-h">Import this backup?</h2>
+            <dl className="import-summary">
+              <dt>Backup{pending.exportedAt && ` from ${new Date(pending.exportedAt).toLocaleString()}`}</dt>
+              <dd>{summarize(pending.progress)}</dd>
+              <dt>This browser now</dt>
+              <dd>{summarize(getProgress())}</dd>
+            </dl>
+            <p>
+              <strong>Merge</strong> keeps both: solved drills from either, the larger hint and attempt counts, this browser's saved code and settings, and for a pattern in both review decks the date that comes sooner.
+              {' '}<strong>Replace</strong> makes this browser match the backup exactly.
+            </p>
+            <p className="dialog-actions">
+              <button className="btn primary" value="merge" autoFocus>Merge</button>
+              <button className="btn" value="replace">Replace</button>
+              <button className="btn" value="">Cancel</button>
+            </p>
+          </form>
+        )}
+      </dialog>
       <dialog ref={help} className="help" aria-labelledby="help-h" onClick={(e) => e.target === help.current && help.current.close()}>
         <h2 id="help-h">Keyboard shortcuts</h2>
         <table>

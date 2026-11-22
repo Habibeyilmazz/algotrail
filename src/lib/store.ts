@@ -82,6 +82,29 @@ export function parseBackup(text: string): { progress: Progress; exportedAt: str
   return { progress: sanitize(raw.progress), exportedAt: at };
 }
 
+/**
+ * Combine a backup with this browser's progress, for someone who practised on two devices.
+ * Solved and revealed stick, counters take the larger value (so merging the same file twice changes nothing),
+ * this browser's saved code and settings win, and when both have a review card the one due sooner wins,
+ * so a pattern forgotten on either device is never skipped.
+ */
+export function mergeProgress(here: Progress, backup: Progress): Progress {
+  const drills = { ...backup.drills };
+  for (const [id, d] of Object.entries(here.drills)) {
+    const b = drills[id];
+    drills[id] = !b ? d : {
+      solved: d.solved || b.solved,
+      hints: Math.max(d.hints, b.hints),
+      revealed: d.revealed || b.revealed,
+      attempts: Math.max(d.attempts, b.attempts),
+      ...(d.code !== undefined ? { code: d.code } : b.code !== undefined ? { code: b.code } : {}),
+    };
+  }
+  const cards = { ...backup.cards };
+  for (const [id, c] of Object.entries(here.cards)) if (!cards[id] || c.due <= cards[id].due) cards[id] = c;
+  return { ...here, drills, cards };
+}
+
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export const summarize = (p: Progress) =>

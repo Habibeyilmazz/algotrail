@@ -1776,6 +1776,25 @@ main {
   white-space: nowrap;
 }
 
+.import-summary {
+  margin: 0 0 12px;
+}
+
+.import-summary dt {
+  font-weight: 700;
+}
+
+.import-summary dd {
+  margin: 0 0 8px;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
 .help kbd + kbd {
   margin-left: 4px;
 }
