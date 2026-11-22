@@ -54,6 +54,8 @@ describe('runner', () => {
     expect(show([1, 'a', undefined, null])).toBe('[1, "a", undefined, null]');
     expect(show({ x: [1] })).toBe('{x: [1]}');
     // An async solution returns a Promise, which used to show as "{}".
+    // A BigInt answer must not look identical to the expected number.
+    expect(show(2n)).toBe('2n');
     expect(show(Promise.resolve(1))).toBe('Promise (return the value itself, not a Promise)');
   });
 

@@ -38,6 +38,7 @@ export function show(v: unknown, depth = 0): string {
   if (v === undefined) return 'undefined';
   if (typeof v === 'number') return Object.is(v, -0) ? '0' : String(v);
   if (typeof v === 'string') return JSON.stringify(v);
+  if (typeof v === 'bigint') return `${v}n`;
   if (typeof v === 'function') return 'function';
   if (typeof v !== 'object' || v === null) return String(v);
   if (v instanceof Promise) return 'Promise (return the value itself, not a Promise)';
