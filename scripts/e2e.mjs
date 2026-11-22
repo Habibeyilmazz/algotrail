@@ -381,7 +381,9 @@ try {
       let moved = false;
       for (let i = 0; i < 40 && !moved; i++) {
         await p.keyboard.press('ArrowRight');
-        moved = await p.evaluate(() => [...document.querySelectorAll('[data-flip]')].some((e) => /translate\((?!0px, 0px)/.test(e.style.transform)));
+        // Steps taken before GSAP has arrived snap into place, so give it time; a tween lasts 0.45 s at 1×.
+        await p.waitForTimeout(50);
+        moved = await p.evaluate(() => [...document.querySelectorAll('[data-flip]')].some((e) => /translate(3d)?\((?!0px, 0px)/.test(e.style.transform)));
       }
       assert.equal(await gsapRequested, reducedMotion === 'no-preference', `GSAP requested (${reducedMotion})`);
       assert.equal(moved, reducedMotion === 'no-preference', `a swap animates (${reducedMotion})`);
