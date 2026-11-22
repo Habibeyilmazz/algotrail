@@ -170,7 +170,7 @@ try {
     await box.fill(`${'['.repeat(4990)}${']'.repeat(4990)}, 1`);
     await box.press('Enter');
     await page.getByRole('alert').getByText(/at most 100 levels deep/).waitFor();
-    assert.equal(await page.getByRole('button', { name: 'Run on this input' }).isEnabled(), true);
+    assert.equal(await page.getByRole('button', { name: 'Run on this input' }).getAttribute('aria-disabled'), 'false');
     await page.getByLabel('Code for K-th largest reading').fill('function kthLargest(nums, k) { console.log("len", nums.length); return [...nums].sort((a, b) => b - a)[k - 1]; }');
     await box.fill('[5, 1, 9, 9], 2');
     await box.press('Enter');
@@ -180,6 +180,8 @@ try {
     await page.getByRole('button', { name: 'Run on this input' }).click();
     await page.getByText('Did not finish in 3 s.').waitFor({ timeout: 8000 });
     await page.getByText('Not the same answer as the reference solution.').waitFor();
+    // A disabled button would drop keyboard focus to the page body for the whole run.
+    assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Run on this input', 'focus stays on the button');
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).drills['kth-largest']);
     assert.ok(!saved?.solved && !saved?.attempts, 'a custom run is not an attempt');
     // Leaving the drill and coming back in the same tab keeps the input.

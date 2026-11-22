@@ -209,7 +209,8 @@ function OwnInput({ p, code, focus }: { p: Problem; code: string; focus: boolean
           <input ref={field} value={text} spellCheck={false} autoComplete="off" aria-invalid={!!error} aria-describedby={error ? 'own-error own-help' : 'own-help'} onChange={(e) => { ownInputs.set(p.id, e.target.value); setText(e.target.value); }} />
           <small id="own-help">JSON values separated by commas, as in the examples. Your code and the reference solution both run on them; keep to the problem's rules, or the reference answer means little.</small>
         </label>
-        <button type="submit" className="btn" disabled={running}>{running ? 'Running…' : 'Run on this input'}</button>
+        {/* aria-disabled, not disabled: a disabled button drops keyboard focus to the page body; submit ignores clicks while running. */}
+        <button type="submit" className="btn" aria-disabled={running}>{running ? 'Running…' : 'Run on this input'}</button>
         {error && <p id="own-error" className="input-error" role="alert">{error}</p>}
       </form>
       <div aria-live="polite">
