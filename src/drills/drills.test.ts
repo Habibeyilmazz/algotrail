@@ -86,6 +86,9 @@ describe('judge (messages from the worker are untrusted)', () => {
     }
     expect(judge({ index: 0, value: [1, 2], got: 42, logs: 'nope', error: {}, ms: 'x' }, tests)).toEqual({ index: 0, ok: true, got: '', logs: [], ms: 0 });
     expect(judge({ index: 0, logs: ['a', 3, null, 'b'] }, tests)?.logs).toEqual(['a', 'b']);
+    // Structured clone keeps own properties on arrays, so a posted array can shadow its methods.
+    const sneaky = structuredClone({ index: 0, logs: Object.assign(['ok'], { slice: 0, filter: 0, map: 0 }) });
+    expect(judge(sneaky, tests)?.logs).toEqual(['ok']);
   });
 
   it('clips long text and caps the log count before it reaches the page', () => {

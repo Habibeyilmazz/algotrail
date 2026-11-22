@@ -95,7 +95,8 @@ export function judge(msg: unknown, tests: TestCase[]): CaseResult | null {
     ok: !error && 'value' in m && deepEqual(m.value, tests[index].expected),
     got: typeof m.got === 'string' ? clip(m.got) : '',
     ...(error ? { error } : {}),
-    logs: Array.isArray(m.logs) ? m.logs.slice(0, MAX_LOGS).filter((l): l is string => typeof l === 'string').map(clip) : [],
+    // Not m.logs.slice: a cloned array keeps own properties, so `slice` could be anything.
+    logs: Array.isArray(m.logs) ? (Array.prototype.slice.call(m.logs, 0, MAX_LOGS) as unknown[]).filter((l): l is string => typeof l === 'string').map(clip) : [],
     ms: typeof m.ms === 'number' ? m.ms : 0,
   };
 }
