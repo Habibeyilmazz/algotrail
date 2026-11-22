@@ -29,7 +29,8 @@ export function runInWorker(code: string, fn: string, tests: TestCase[], limit =
     };
     worker.onerror = (e) => {
       e.preventDefault();
-      finish({ kind: 'compile-error', message: clip(e.message || 'The code could not be run.') });
+      // An error thrown in the worker has a message; a worker script that failed to load (offline) has none.
+      finish({ kind: 'compile-error', message: e.message ? clip(e.message) : 'The test runner did not load. If you are offline, reconnect and run again.' });
     };
     worker.postMessage({ code, fn, args: tests.map((t) => t.args) });
   });
