@@ -123,6 +123,7 @@ export function Transport({ player, compact = false }: { player: Player; compact
           min={0}
           max={lastIndex}
           value={i}
+          aria-valuetext={`Step ${i + 1} of ${lastIndex + 1}`}
           onChange={(e) => go(Number(e.target.value))}
           style={{ '--fill': `${lastIndex ? (i / lastIndex) * 100 : 100}%` } as React.CSSProperties}
         />

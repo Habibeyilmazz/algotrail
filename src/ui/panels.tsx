@@ -92,9 +92,10 @@ function GridView({ p }: { p: GridPanel }) {
               <span
                 key={c}
                 className={`grid-cell ${wall ? 'grid-wall' : ''} ${p.board && (r + c) % 2 ? 'grid-alt' : ''} ${toneClass(p.tones?.[`${r},${c}`])}`}
+                role={wall ? 'img' : undefined}
                 aria-label={wall ? 'wall' : undefined}
               >
-                {wall ? '' : v === '♛' ? <span className="queen" aria-label="queen">♛</span> : v}
+                {wall ? '' : v === '♛' ? <span className="queen" role="img" aria-label="queen">♛</span> : v}
               </span>
             );
           })}
