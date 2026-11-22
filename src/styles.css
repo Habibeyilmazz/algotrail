@@ -19,7 +19,7 @@
   --done: #267d4e;
   --done-ink: #ffffff;
   --range: #dce6e0;
-  --bad: #c93c3c;
+  --bad: #b83232; /* 4.8:1 on --sunk, the darkest light surface text sits on */
   --bad-ink: #ffffff;
   --path: #0c7680;
   --path-ink: #ffffff;
