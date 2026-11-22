@@ -58,7 +58,7 @@ There is no backend. `dist/` is a static site that works from any path on any st
 
 **Spaced review**: each pattern is one SM-2 card (signals, core idea, code template). Solving a drill adds its pattern to your deck; you can also add patterns by hand.
 
-**Everything else**: light and dark themes (follows the system until you pick one), keyboard shortcuts for everything (press `?`), a phone layout, and progress saved in `localStorage` only. Drafts are saved shortly after you stop typing, when the editor loses focus, and when the tab is hidden or closed.
+**Everything else**: light and dark themes (follows the system until you pick one), keyboard shortcuts for everything (press `?`), a phone layout, and progress saved in `localStorage` only. Drafts are saved shortly after you stop typing, when the editor loses focus, and when the tab is hidden or closed (in Firefox, closing the tab within half a second of typing can still lose those last keystrokes; see Status).
 
 **Backups**: progress lives in one browser, so the footer has *Export a backup* (downloads `algotrail-backup-<date>.json` with solved drills, saved code, hints used, review schedule, theme and speed) and *Import a backup* (shows what the file holds and what this browser holds, then lets you merge or replace). Use it to move to another device, to combine progress from two devices, or before clearing site data. *Merge* keeps solved drills from either side, the larger hint and attempt counts, this browser's saved code and settings, and, for a pattern in both review decks, whichever card is due sooner, so a pattern forgotten on either device is not skipped. Merging the same file twice changes nothing. *Replace* makes this browser match the file exactly.
 
@@ -113,7 +113,7 @@ Where algotrail fits: you are learning a pattern (two pointers, BFS, a DP table)
 
 ## Status and roadmap
 
-Working and tested: everything listed under Features. The unit tests (vitest) and the end-to-end suite (Playwright) run in CI on every push. CI runs the end-to-end suite in Chromium, Firefox and WebKit, using Playwright's builds on Linux (one step, saving a draft typed just before the tab closes, is skipped in Firefox because it fails there intermittently; see CHANGELOG). WebKit is the engine behind Safari but is not Safari itself, and nothing has been tried on a real phone.
+Working and tested: everything listed under Features. The unit tests (vitest) and the end-to-end suite (Playwright) run in CI on every push. CI runs the end-to-end suite in Chromium, Firefox and WebKit, using Playwright's builds on Linux (one step, saving a draft typed just before the tab closes, only reports in Firefox instead of failing: there the draft is lost in about half of CI runs, a known bug; see CHANGELOG). WebKit is the engine behind Safari but is not Safari itself, and nothing has been tried on a real phone.
 
 Not built yet:
 
