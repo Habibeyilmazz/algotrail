@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Progress backups (round 4, feature)
+
+Chosen after using the app as a newcomer: everything (solved drills, saved code, the review schedule) lived in one browser's `localStorage` with no way out, so a new laptop, a phone, or clearing site data lost weeks of spaced review. The footer only offered "Erase my progress".
+
+- **Added: Export a backup / Import a backup** in the footer. Export downloads `algotrail-backup-YYYY-MM-DD.json`. Import asks for a file, shows "Backup: N solved drills and M patterns in review" next to what this browser has now, and on confirm replaces this browser's progress, then reloads (like Erase, so a pending draft save cannot overwrite the imported code) and says what was imported. A wrong file, bad JSON, another version or an oversized file gets a message and changes nothing; so does a browser that refuses to store it.
+- The file format is `{ app: "algotrail", version: 1, exportedAt, progress }`. `parseBackup` in `src/lib/store.ts` checks the tag, version and size (5M characters) and passes `progress` through the existing `sanitize`, so an edited or hostile file is cleaned the same way as stored data.
+- Tests: `progress backups` in `src/lib/lib.test.ts` (round trip, refusals, cleaning, summary text) and an e2e step that exports, erases, imports a wrong file, declines once, then imports and compares stored progress with the original under the production CSP.
+- Fixed before release (Codex review): the file size check compared bytes against the character cap, so a backup with non-ASCII code could be refused although it was valid.
+- **Known limits:** importing replaces, it does not merge two devices' progress. Export reads saved progress, so code typed in the last 0.4 s before clicking Export (before the draft autosave) is not in the file. Saved code of 50,000 characters or more was already dropped on load and is dropped on import too.
+
 ### Security pass (round 3)
 
 Reviewed by hand plus a Codex second opinion (the security-review skill could not run in this session). Problems were reproduced with Playwright against the built app before fixing.
@@ -71,4 +81,4 @@ Checked with real screenshots at 1440, 1280, 1024, 800 and 390 px in both themes
 - Add a visualizer: write an `Algo` in `src/algos/`, register it in `src/algos/index.ts`, add result tests in `algos.test.ts`. The e2e test expects 18 links in the sidebar; update the count.
 - Add a drill: append to one of `src/drills/problems-*.ts`. `drills.test.ts` runs the reference solution against its tests automatically. Make up new test inputs; do not reuse examples from judge sites. The first two tests are shown as examples on the drill page.
 - Screenshots in `docs/screenshots/` were taken from the real app with Playwright; `scripts/shots.mjs <dir> [baseUrl]` captures the main screens. To refresh the README images: `npm run build && npm run preview`, then `node scripts/readme-shots.mjs`.
-- Still not built (checked in round 2): syntax highlighting in the editor, a layered layout for directed graphs, progress export/import, FSRS. GitHub Pages is not enabled; the workflow is manual only.
+- Still not built (checked in round 4): syntax highlighting in the editor, a layered layout for directed graphs, merging a backup into existing progress, FSRS, visualizer input in the URL. GitHub Pages is not enabled; the workflow is manual only.

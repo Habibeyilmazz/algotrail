@@ -49,6 +49,8 @@ There is no backend. `dist/` is a static site that works from any folder, includ
 
 **Everything else**: light and dark themes (follows the system until you pick one), keyboard shortcuts for everything (press `?`), a phone layout, and progress saved in `localStorage` only.
 
+**Backups**: progress lives in one browser, so the footer has *Export a backup* (downloads `algotrail-backup-<date>.json` with solved drills, saved code, hints used, review schedule, theme and speed) and *Import a backup* (shows what the file holds and what this browser holds, then replaces this browser's progress after you confirm). Use it to move to another device or before clearing site data. Importing replaces; it does not merge.
+
 ![Drill page after a passing run](docs/screenshots/drill.png)
 
 <p>
@@ -63,7 +65,7 @@ There is no backend. `dist/` is a static site that works from any folder, includ
 - **Rendering.** React draws panels as HTML (arrays, tables) or SVG (graphs on a circle, trees with a small tidy layout). A FLIP hook measures keyed elements before and after each frame and tweens the difference with GSAP.
 - **Drill runner.** `src/drills/runner.ts` compiles your code with `new Function` inside a module worker and deep-clones each test's arguments. The worker never sees the expected answers: it posts back the raw return value, and the page validates each message, compares the value structurally and clips long text, so code cannot fake a pass, crash the page or flood it. The page terminates the worker on timeout. A unit test runs every reference solution through the same runner, and checks that the empty starter fails.
 - **Content-Security-Policy.** The build adds a CSP meta tag (`vite.config.ts`) that blocks inline and third-party scripts. It allows `'unsafe-eval'` because some browsers apply the page policy to the drill worker, which needs `new Function`.
-- **Storage.** One `localStorage` key, rebuilt field by field on load so hand edits or old data cannot break the app. Other tabs stay in sync through the `storage` event.
+- **Storage.** One `localStorage` key, rebuilt field by field on load so hand edits or old data cannot break the app. Other tabs stay in sync through the `storage` event. A backup file is the same data wrapped as `{ app: "algotrail", version: 1, exportedAt, progress }`; import refuses anything else, caps the size, and runs `progress` through the same sanitizer (`parseBackup` in `src/lib/store.ts`).
 
 ## Keyboard
 
@@ -91,7 +93,7 @@ Not built yet:
 - Syntax highlighting in the drill editor.
 - Visualizers for subsets backtracking, Bellman-Ford, prefix sums, monotonic stack and segment trees.
 - A layered layout for directed graphs (topological sort uses the same circle layout as other graphs).
-- Export and import of progress, and IndexedDB storage for larger histories.
+- Merging a backup into existing progress (import replaces it), and IndexedDB storage for larger histories.
 - FSRS scheduling as an alternative to SM-2.
 - Shareable links that carry visualizer input in the URL.
 
