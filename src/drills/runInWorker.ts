@@ -1,4 +1,4 @@
-import type { CaseResult } from './runner';
+import { clip, judge, type CaseResult } from './runner';
 import type { TestCase } from './types';
 
 export type RunOutcome =
@@ -19,14 +19,18 @@ export function runInWorker(code: string, fn: string, tests: TestCase[], limit =
     const timer = setTimeout(() => finish({ kind: 'results', results, timedOut: true }), limit);
     worker.onmessage = (e) => {
       const msg = e.data;
-      if (msg.type === 'compile-error') finish({ kind: 'compile-error', message: msg.message });
-      else if (msg.type === 'case') results.push(msg.result);
-      else if (msg.type === 'done') finish({ kind: 'results', results, timedOut: false });
+      if (typeof msg !== 'object' || msg === null) return;
+      if (msg.type === 'compile-error') {
+        finish({ kind: 'compile-error', message: typeof msg.message === 'string' ? clip(msg.message) : 'The code could not be run.' });
+      } else if (msg.type === 'case') {
+        const r = judge(msg, tests);
+        if (r && !results.some((x) => x.index === r.index)) results.push(r);
+      } else if (msg.type === 'done') finish({ kind: 'results', results, timedOut: false });
     };
     worker.onerror = (e) => {
       e.preventDefault();
-      finish({ kind: 'compile-error', message: e.message || 'The code could not be run.' });
+      finish({ kind: 'compile-error', message: clip(e.message || 'The code could not be run.') });
     };
-    worker.postMessage({ code, fn, tests });
+    worker.postMessage({ code, fn, args: tests.map((t) => t.args) });
   });
 }

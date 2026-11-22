@@ -11,6 +11,16 @@ export interface CaseResult {
   ms: number;
 }
 
+/** What the worker reports for one case. The page compares `value` with the expected answer, never the worker. */
+export interface RawCase {
+  index: number;
+  value?: unknown;
+  got: string;
+  error?: string;
+  logs: string[];
+  ms: number;
+}
+
 export function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (typeof a === 'number' && typeof b === 'number') return Number.isNaN(a) && Number.isNaN(b);
@@ -49,7 +59,7 @@ export function compile(code: string, fn: string): (...args: unknown[]) => unkno
 
 const MAX_LOGS = 30;
 
-export function runCase(f: (...args: unknown[]) => unknown, test: TestCase, index: number): CaseResult {
+export function runCase(f: (...args: unknown[]) => unknown, args: unknown[], index: number): RawCase {
   const logs: string[] = [];
   const original = console.log;
   console.log = (...parts: unknown[]) => {
@@ -57,11 +67,35 @@ export function runCase(f: (...args: unknown[]) => unknown, test: TestCase, inde
   };
   const t0 = performance.now();
   try {
-    const got = f(...structuredClone(test.args));
-    return { index, ok: deepEqual(got, test.expected), got: show(got), logs, ms: performance.now() - t0 };
+    const value = f(...structuredClone(args));
+    return { index, value, got: show(value), logs, ms: performance.now() - t0 };
   } catch (e) {
-    return { index, ok: false, error: e instanceof Error ? `${e.name}: ${e.message}` : String(e), logs, ms: performance.now() - t0 };
+    return { index, got: '', error: e instanceof Error ? `${e.name}: ${e.message}` : String(e), logs, ms: performance.now() - t0 };
   } finally {
     console.log = original;
   }
+}
+
+const MAX_TEXT = 2000;
+export const clip = (s: string) => (s.length > MAX_TEXT ? `${s.slice(0, MAX_TEXT)}… (${s.length - MAX_TEXT} more characters)` : s);
+
+/**
+ * Trust boundary: the user's code shares the worker with the reporting code, so it can post
+ * any message it likes. Rebuild the result field by field, clip text before it reaches the
+ * DOM, and decide pass/fail here against answers the worker never sees.
+ */
+export function judge(msg: unknown, tests: TestCase[]): CaseResult | null {
+  if (typeof msg !== 'object' || msg === null) return null;
+  const m = msg as Record<string, unknown>;
+  const index = m.index;
+  if (typeof index !== 'number' || !Number.isInteger(index) || index < 0 || index >= tests.length) return null;
+  const error = typeof m.error === 'string' ? clip(m.error) : undefined;
+  return {
+    index,
+    ok: !error && 'value' in m && deepEqual(m.value, tests[index].expected),
+    got: typeof m.got === 'string' ? clip(m.got) : '',
+    ...(error ? { error } : {}),
+    logs: Array.isArray(m.logs) ? m.logs.slice(0, MAX_LOGS).filter((l): l is string => typeof l === 'string').map(clip) : [],
+    ms: typeof m.ms === 'number' ? m.ms : 0,
+  };
 }

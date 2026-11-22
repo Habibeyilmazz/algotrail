@@ -112,6 +112,19 @@ try {
     await page.getByText(/Could not run your code/).waitFor();
   });
 
+  await step('code cannot fake a pass, crash the page or flood it with output', async () => {
+    await page.getByLabel('Code for First departure').fill(
+      'function firstDeparture() {\n  self.postMessage({ type: "case", result: null });\n' +
+        '  for (let i = 0; i < 5; i++) self.postMessage({ type: "case", index: i, ok: true, logs: [], ms: 0 });\n' +
+        '  self.postMessage({ type: "done" });\n  console.log("y".repeat(5e6));\n  return "x".repeat(5e6);\n}',
+    );
+    await page.getByRole('button', { name: /Run tests/ }).click();
+    await page.getByText('0 of 5 tests pass').waitFor();
+    assert.ok((await page.evaluate(() => document.body.innerText.length)) < 100_000);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).drills['first-departure']);
+    assert.notEqual(saved.solved, true);
+  });
+
   await step('a draft typed just before leaving the page is kept', async () => {
     await page.goto(`${BASE}#/drills/rotated-minimum`);
     await page.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 42; }');
