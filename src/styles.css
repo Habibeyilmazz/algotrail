@@ -88,6 +88,9 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  /* Show === and => as typed: code ligatures hide what a learner has to type.
+     !important because every font shorthand below would reset it. */
+  font-feature-settings: 'liga' 0, 'calt' 0 !important;
 }
 
 html {
@@ -151,7 +154,8 @@ a:hover {
 
 code,
 kbd,
-pre {
+pre,
+textarea {
   font-family: var(--font-code);
   font-size: 0.88em;
 }
@@ -969,7 +973,7 @@ main {
   align-items: start;
   padding-top: 4px;
   font-size: 0.8rem;
-  background: var(--range);
+  background: color-mix(in srgb, var(--ink) 13%, var(--surface));
   border-color: transparent;
   transition: background-color 200ms ease, color 200ms ease, height 200ms ease, opacity 200ms ease;
 }
@@ -1034,7 +1038,7 @@ main {
 }
 
 .arr-bars .tone-range.arr-cell {
-  background: color-mix(in srgb, var(--done) 30%, var(--range));
+  background: color-mix(in srgb, var(--done) 42%, var(--surface));
 }
 
 .tone-muted.arr-cell,
