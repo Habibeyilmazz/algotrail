@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ALGOS } from './algos';
 import { href, useRoute, type Route } from './lib/router';
 import { isDue } from './lib/srs';
-import { resetProgress, update, useProgress } from './lib/store';
+import { backupText, getProgress, KEY, MAX_BACKUP_CHARS, parseBackup, resetProgress, summarize, update, useProgress } from './lib/store';
 import { DrillPage, DrillsPage, PatternPage } from './ui/Drills';
 import { HomePage } from './ui/Home';
 import { ignoreKey } from './ui/keys';
@@ -10,6 +10,23 @@ import { ReviewPage, useNow } from './ui/Review';
 import { VisualizerPage } from './ui/Visualizer';
 
 const THEMES = ['system', 'light', 'dark'] as const;
+
+// A one-time message that survives the reload after an import.
+const FLASH = 'algotrail:flash';
+const flash = (msg: string) => {
+  try {
+    sessionStorage.setItem(FLASH, msg);
+  } catch {}
+};
+const takeFlash = () => {
+  try {
+    const msg = sessionStorage.getItem(FLASH) ?? '';
+    sessionStorage.removeItem(FLASH);
+    return msg;
+  } catch {
+    return '';
+  }
+};
 
 function page(route: Route) {
   switch (route.page) {
@@ -68,6 +85,44 @@ export function App() {
     scrollTo(0, 0);
     main.current?.focus({ preventScroll: true });
   }, [route.page, 'id' in route ? route.id : '']);
+
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [dataMsg, setDataMsg] = useState(takeFlash);
+
+  const exportBackup = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([backupText(getProgress())], { type: 'application/json' }));
+    a.download = `algotrail-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    setDataMsg(`Exported ${summarize(getProgress())}.`);
+  };
+
+  const importBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // so choosing the same file again fires change
+    if (!file) return;
+    let backup: ReturnType<typeof parseBackup>;
+    try {
+      if (file.size > MAX_BACKUP_CHARS) throw new Error('This file is too large to be an algotrail backup.');
+      backup = parseBackup(await file.text());
+    } catch (err) {
+      setDataMsg(`Nothing imported. ${(err as Error).message}`);
+      return;
+    }
+    const when = backup.exportedAt ? ` from ${new Date(backup.exportedAt).toLocaleString()}` : '';
+    if (!confirm(`Replace the progress in this browser with the backup${when}?\n\nBackup: ${summarize(backup.progress)}.\nThis browser now: ${summarize(getProgress())}.`)) return;
+    try {
+      localStorage.setItem(KEY, JSON.stringify(backup.progress));
+    } catch {
+      setDataMsg('Nothing imported. This browser would not save it (storage is full or blocked).');
+      return;
+    }
+    flash(`Imported ${summarize(backup.progress)}.`);
+    // Reload (store.ts loads the saved key) rather than updating in place, for the same reason as erasing:
+    // a pending draft save must not overwrite the imported code.
+    location.reload();
+  };
 
   const cycleTheme = () => update((s) => ({ ...s, theme: THEMES[(THEMES.indexOf(s.theme) + 1) % THEMES.length] }));
 
@@ -131,19 +186,25 @@ export function App() {
       <footer className="footer">
         <p>
           Progress is saved in this browser only.{' '}
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => {
-              if (!confirm('Erase solved drills, saved code and review schedule from this browser?')) return;
-              resetProgress();
-              // Reload so a pending draft autosave or a test run still in flight cannot write old progress back.
-              location.reload();
-            }}
-          >
-            Erase my progress
-          </button>
+          <span className="footer-actions">
+            <button type="button" className="link-btn" onClick={exportBackup}>Export a backup</button>
+            <button type="button" className="link-btn" onClick={() => fileInput.current?.click()}>Import a backup</button>
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => {
+                if (!confirm('Erase solved drills, saved code and review schedule from this browser?')) return;
+                resetProgress();
+                // Reload so a pending draft autosave or a test run still in flight cannot write old progress back.
+                location.reload();
+              }}
+            >
+              Erase my progress
+            </button>
+          </span>
         </p>
+        <input ref={fileInput} type="file" accept=".json,application/json" hidden aria-label="Backup file to import" onChange={importBackup} />
+        <p role="status" className="footer-status">{dataMsg}</p>
       </footer>
       <dialog ref={help} className="help" aria-labelledby="help-h" onClick={(e) => e.target === help.current && help.current.close()}>
         <h2 id="help-h">Keyboard shortcuts</h2>

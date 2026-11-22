@@ -2,6 +2,7 @@
 // Usage: npm run e2e   (builds, then serves dist/ on port 4202)
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const PORT = 4202;
@@ -161,6 +162,43 @@ try {
     const card = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).cards['two-pointers']);
     assert.equal(card.reps, 1);
     assert.ok(card.due > Date.now() + 23 * 3600_000);
+  });
+
+  await step('a backup can be exported, erased and imported again', async () => {
+    const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')));
+    const before = await stored();
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export a backup' }).click()]);
+    assert.match(download.suggestedFilename(), /^algotrail-backup-\d{4}-\d{2}-\d{2}\.json$/);
+    const file = await download.path();
+    assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).progress, before);
+
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: 'Erase my progress' }).click();
+    await page.waitForLoadState('load');
+    assert.deepEqual((await stored()).cards, {});
+
+    const choose = async (files) => {
+      const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import a backup' }).click()]);
+      await chooser.setFiles(files);
+    };
+    await choose({ name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"todo": []}') });
+    await page.getByRole('status').getByText('Nothing imported. This file is not an algotrail progress backup.').waitFor();
+
+    // Declining the confirm leaves progress alone.
+    page.once('dialog', (d) => d.dismiss());
+    await choose(file);
+    await page.waitForTimeout(300);
+    assert.deepEqual((await stored()).cards, {});
+
+    page.once('dialog', (d) => {
+      assert.match(d.message(), /Backup: 0 solved drills and 1 pattern in review\.\nThis browser now: 0 solved drills and 0 patterns in review\./);
+      d.accept();
+    });
+    await choose(file);
+    await page.getByRole('status').getByText('Imported 0 solved drills and 1 pattern in review.').waitFor();
+    assert.deepEqual(await stored(), before);
+    // The restored card is listed in the deck, not offered to add again.
+    assert.equal(await page.getByRole('button', { name: 'Add Two pointers to review' }).count(), 0);
   });
 
   await step('theme toggle and shortcut help work from the keyboard', async () => {

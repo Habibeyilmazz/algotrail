@@ -445,6 +445,17 @@ main {
   margin: 0;
 }
 
+.footer-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.footer-status:not(:empty) {
+  margin-top: 8px;
+  color: var(--ink);
+}
+
 /* ---------- home ---------- */
 
 .hero {

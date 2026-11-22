@@ -55,6 +55,31 @@ export function sanitize(raw: unknown): Progress {
   return out;
 }
 
+// Backup files carry a tag and a version so a random JSON file is refused with a clear message.
+export const MAX_BACKUP_CHARS = 5_000_000;
+
+export const backupText = (p: Progress, now = Date.now()) =>
+  JSON.stringify({ app: 'algotrail', version: 1, exportedAt: new Date(now).toISOString(), progress: p }, null, 2);
+
+export function parseBackup(text: string): { progress: Progress; exportedAt: string | null } {
+  if (text.length > MAX_BACKUP_CHARS) throw new Error('This file is too large to be an algotrail backup.');
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error('This file is not valid JSON.');
+  }
+  if (!isObj(raw) || raw.app !== 'algotrail' || !isObj(raw.progress)) throw new Error('This file is not an algotrail progress backup.');
+  if (raw.version !== 1) throw new Error('This backup comes from a different version of algotrail and cannot be read.');
+  const at = typeof raw.exportedAt === 'string' && !Number.isNaN(Date.parse(raw.exportedAt)) ? raw.exportedAt : null;
+  return { progress: sanitize(raw.progress), exportedAt: at };
+}
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+export const summarize = (p: Progress) =>
+  `${plural(Object.values(p.drills).filter((d) => d.solved).length, 'solved drill')} and ${plural(Object.keys(p.cards).length, 'pattern')} in review`;
+
 function load(): Progress {
   try {
     // Reading localStorage itself can throw (blocked storage), so it stays inside the try.

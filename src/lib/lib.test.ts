@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { describeDue, newCard, review } from './srs';
-import { sanitize } from './store';
+import { backupText, emptyProgress, MAX_BACKUP_CHARS, parseBackup, sanitize, summarize, type Progress } from './store';
 
 const DAY = 86_400_000;
 
@@ -57,5 +57,38 @@ describe('progress sanitizer', () => {
   it('drops cards for unknown patterns and fractional counters', () => {
     const p = sanitize({ cards: { gone: { ease: 2.5, interval: 1, reps: 1, due: 5 }, heap: { ease: 2.5, interval: 0, reps: 0.5, due: 0 }, trie: { ease: 2.5, interval: 1, reps: 1, due: 0 } } });
     expect(Object.keys(p.cards)).toEqual(['trie']);
+  });
+});
+
+describe('progress backups', () => {
+  const p: Progress = {
+    theme: 'dark',
+    speed: 2,
+    drills: { 'floor-sqrt': { solved: true, hints: 1, revealed: false, attempts: 2, code: 'function floorSqrt(n) {}' }, 'pair-for-budget': { solved: false, hints: 0, revealed: false, attempts: 1 } },
+    cards: { heap: { ease: 2.5, interval: 6, reps: 2, due: 1_800_000_000_000 } },
+  };
+
+  it('round-trips through a backup file', () => {
+    const text = backupText(p, Date.UTC(2026, 10, 22));
+    expect(parseBackup(text)).toEqual({ progress: p, exportedAt: '2026-11-22T00:00:00.000Z' });
+  });
+
+  it('refuses files that are not algotrail backups', () => {
+    expect(() => parseBackup('{oops')).toThrow('not valid JSON');
+    expect(() => parseBackup('[]')).toThrow('not an algotrail progress backup');
+    expect(() => parseBackup(JSON.stringify({ drills: {}, cards: {} }))).toThrow('not an algotrail progress backup');
+    expect(() => parseBackup(JSON.stringify({ app: 'algotrail', version: 1, progress: 'x' }))).toThrow('not an algotrail progress backup');
+    expect(() => parseBackup(JSON.stringify({ app: 'algotrail', version: 2, progress: {} }))).toThrow('different version');
+    expect(() => parseBackup(' '.repeat(MAX_BACKUP_CHARS + 1))).toThrow('too large');
+  });
+
+  it('cleans what is inside a backup like stored progress', () => {
+    const text = JSON.stringify({ app: 'algotrail', version: 1, exportedAt: 'whenever', progress: { theme: 'neon', drills: { a: { solved: 1 } }, cards: { gone: {} } } });
+    expect(parseBackup(text)).toEqual({ progress: { ...emptyProgress(), drills: { a: { solved: false, hints: 0, revealed: false, attempts: 0 } } }, exportedAt: null });
+  });
+
+  it('summarizes progress for the import prompt', () => {
+    expect(summarize(p)).toBe('1 solved drill and 1 pattern in review');
+    expect(summarize(emptyProgress())).toBe('0 solved drills and 0 patterns in review');
   });
 });
