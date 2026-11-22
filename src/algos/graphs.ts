@@ -193,7 +193,7 @@ export const dijkstra: Algo = {
     const dist = new Map<string, number>(g.nodes.map((n) => [n, Infinity]));
     const prev = new Map<string, string>();
     const settled = new Set<string>();
-    let heap: [number, string][] = [[0, s]];
+    const heap: [number, string][] = [[0, s]];
     dist.set(s, 0);
     const snap = (line: number, note: string, u: string | null, edge?: [string, string], edgeTone: Tone = 'compare') => {
       const nt: Record<string, Tone> = {};
@@ -214,8 +214,7 @@ export const dijkstra: Algo = {
     snap(0, `${s} starts at distance 0; everything else is ∞.`, null);
     while (heap.length) {
       snap(1, `${heap.length} entr${heap.length > 1 ? 'ies' : 'y'} in the heap.`, null);
-      heap.sort((x, y) => x[0] - y[0] || byName(x[1], y[1]));
-      const [d, u] = heap.shift()!;
+      const [d, u] = heap.shift()!; // the heap is kept sorted on every push
       snap(2, `Pop ${u} with distance ${d}.`, u);
       if (settled.has(u)) {
         snap(3, `${u} is already settled with a shorter distance; this entry is stale.`, u);
@@ -230,7 +229,7 @@ export const dijkstra: Algo = {
           dist.set(v, d + w);
           prev.set(v, u);
           heap.push([d + w, v]);
-          heap = [...heap].sort((x, y) => x[0] - y[0] || byName(x[1], y[1]));
+          heap.sort((x, y) => x[0] - y[0] || byName(x[1], y[1]));
           snap(6, `${d} + ${w} = ${d + w} beats ${old === Infinity ? '∞' : old}. Update ${v}.`, u, [u, v], 'active');
         } else {
           snap(5, `${d} + ${w} = ${d + w} does not beat ${dist.get(v)} for ${v}.`, u, [u, v]);
