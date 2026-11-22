@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Launch pass (round 6)
+
+Made the repo ready for visitors, and fixed the real bugs found on the way (each reproduced with a failing e2e step first). The e2e suite now has 21 steps.
+
+- **Fixed: closing the tab within 0.4 s of typing lost those keystrokes** (a gap reported last round). The drill draft is also saved on `pagehide` and when the tab is hidden (`visibilitychange`). e2e closes a tab mid-autosave and reads the draft from a second tab.
+- **Fixed: a key typed right after Enter or Tab in the drill editor could land in the wrong place** (`return` became `eturn` with the `r` at the end). The editor reset the caret one frame after auto-indenting, moving it under any key typed within that frame. Found while recording the demo GIF.
+- **Fixed: Ctrl/⌘+Enter did nothing in one-line visualizer fields** (numbers, target), although the shortcut list says it applies the input. It worked only in multi-line fields; the handler now sits on the form.
+- **Fixed: saved progress for drills that no longer exist was kept**, so an imported backup could be counted as having more solved drills than the app has. `sanitize` drops unknown drill ids, as it already did for review cards.
+- **Fixed before release (Codex review):** the new tab-close save could write a pending draft, or the tab's old progress, back over freshly erased or imported progress during the reload. Saving stops once Erase or Import starts its reload (`reloadFromStorage` in `src/lib/store.ts`).
+- **Added: `docs/demo.gif`** at the top of the README, recorded from the built app by `scripts/readme-demo.mjs` (Playwright video plus ffmpeg): quick sort on typed input, then a drill typed in and passing.
+- **Added: CONTRIBUTING.md** (setup, how drills and visualizers are built and tested, write drills from scratch), **SECURITY.md** (scope; private vulnerability reporting is not enabled, so it asks for a contact request issue without details), and issue forms for bugs and drill or visualizer ideas.
+- **README:** a one-line pitch, the demo, a shorter quickstart, a comparison table with VisuAlgo, the USFCA visualizations, Algorithm Visualizer, LeetCode/NeetCode and Anki saying when to use each instead, a status section (Chromium-only testing, no hosted copy) and a contributing section. Repo description and topics were already set and still match.
+- **Still open:** importing replaces rather than merges. Only Chromium was tested. FSRS, syntax highlighting and visualizer input in the URL are not built. GitHub Pages is not enabled, so there is no live demo link. No social preview image was made (GitHub only accepts one through the web settings); the logo from an earlier round is unchanged.
+
 ### Reliability pass (round 5, tests)
 
 Tried to break the built app with Playwright (odd, empty, huge and non-ASCII input, malformed and BOM-prefixed backup files, offline runs, blocked storage, odd return values from drill code) and checked the time-zone and boundary logic with unit tests. Each bug below was reproduced, got a failing test first, then the fix. Visualizer inputs held up: every probe gave frames or a clear input error. Codex reviewed the diff and found nothing.

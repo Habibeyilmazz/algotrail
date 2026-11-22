@@ -29,7 +29,7 @@ Other scripts:
 npm test           # unit tests (vitest): algorithms, input fuzzing, every reference solution, runner, SM-2, storage
 npm run typecheck  # tsc
 npm run build      # static site in dist/
-npm run e2e        # builds, then runs the main user journeys in Playwright (Chromium) against dist/ on port 4202
+npm run e2e        # builds, then runs 21 user journeys in Playwright (Chromium) against dist/ on port 4202
                    # (first time only: npx playwright install chromium)
 ```
 
