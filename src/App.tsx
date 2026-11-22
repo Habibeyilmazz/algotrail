@@ -104,7 +104,8 @@ export function App() {
     if (!file) return;
     let backup: ReturnType<typeof parseBackup>;
     try {
-      if (file.size > MAX_BACKUP_CHARS) throw new Error('This file is too large to be an algotrail backup.');
+      // size is in bytes and the cap in characters; a UTF-8 character takes up to 4 bytes.
+      if (file.size > 4 * MAX_BACKUP_CHARS) throw new Error('This file is too large to be an algotrail backup.');
       backup = parseBackup(await file.text());
     } catch (err) {
       setDataMsg(`Nothing imported. ${(err as Error).message}`);
