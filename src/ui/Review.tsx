@@ -5,7 +5,7 @@ import { href } from '../lib/router';
 import { describeDue, GRADES, isDue, review, type Grade } from '../lib/srs';
 import { update, useProgress } from '../lib/store';
 import { addToReview } from './Drills';
-import { isTyping } from './keys';
+import { ignoreKey } from './keys';
 
 /** Re-renders every so often so "due" labels move on; returns the time of this render. */
 export function useNow(everyMs = 30_000) {
@@ -35,7 +35,7 @@ export function ReviewPage() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e) || e.metaKey || e.ctrlKey || e.altKey || !current) return;
+      if (ignoreKey(e) || e.metaKey || e.ctrlKey || e.altKey || !current) return;
       if (e.key === ' ' && !revealed && !(e.target as HTMLElement).closest('button, a')) {
         e.preventDefault();
         setRevealed(true);

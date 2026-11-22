@@ -7,9 +7,9 @@ import { runInWorker, TIME_LIMIT_MS, type RunOutcome } from '../drills/runInWork
 import type { Problem } from '../drills/types';
 import { href } from '../lib/router';
 import { describeDue, newCard } from '../lib/srs';
-import { update, updateDrill, useProgress } from '../lib/store';
+import { getProgress as progressNow, update, updateDrill, useProgress } from '../lib/store';
 import { CodeEditor } from './CodeEditor';
-import { isTyping } from './keys';
+import { ignoreKey } from './keys';
 
 export function Inline({ text }: { text: string }) {
   // `code` spans only; everything else is plain text (no HTML injection).
@@ -155,22 +155,31 @@ function Drill({ problem: p }: { problem: Problem }) {
   const list = problemsFor(p.pattern);
   const next = list[list.indexOf(p) + 1];
 
-  // Save the draft shortly after typing stops.
+  // Save the draft shortly after typing stops, and whatever is left when leaving the page.
+  const latest = useRef(code);
+  latest.current = code;
+  const saved = useRef(state.code ?? starterCode(p));
+  const save = (text: string) => {
+    if (text === saved.current) return;
+    saved.current = text;
+    updateDrill(p.id, { code: text });
+  };
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (code !== (state.code ?? starterCode(p))) updateDrill(p.id, { code });
-    }, 400);
+    const t = setTimeout(() => save(code), 400);
     return () => clearTimeout(t);
   }, [code]);
+  useEffect(() => () => save(latest.current), []);
 
   const run = async () => {
     if (running) return;
     setRunning(true);
+    save(code);
     const result = await runInWorker(code, p.fn, p.tests);
     setRunning(false);
     setOutcome(result);
     const passed = result.kind === 'results' && !result.timedOut && result.results.length === p.tests.length && result.results.every((r) => r.ok);
-    updateDrill(p.id, { code, attempts: state.attempts + 1, ...(passed ? { solved: true } : {}) });
+    // Only progress fields here: the editor may hold newer code than the run used.
+    updateDrill(p.id, { attempts: (progressNow().drills[p.id]?.attempts ?? 0) + 1, ...(passed ? { solved: true } : {}) });
     if (passed) addToReview(p.pattern, 1);
     requestAnimationFrame(() => resultsRef.current?.focus());
   };
@@ -181,7 +190,7 @@ function Drill({ problem: p }: { problem: Problem }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (ignoreKey(e) || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'h') {
         e.preventDefault();
         showHint();

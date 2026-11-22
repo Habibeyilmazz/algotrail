@@ -27,7 +27,7 @@ export function review(card: Card, grade: Grade, now: number): Card {
   const ease = Math.max(1.3, card.ease + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
   if (q < 3) return { ease, interval: 0, reps: 0, due: now + 10 * 60_000 }; // see it again this session
   const reps = card.reps + 1;
-  const interval = reps === 1 ? 1 : reps === 2 ? 6 : Math.round(card.interval * ease);
+  const interval = reps === 1 ? 1 : reps === 2 ? 6 : Math.ceil(card.interval * ease);
   return { ease, interval, reps, due: now + interval * DAY };
 }
 

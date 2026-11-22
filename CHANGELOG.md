@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- A test run no longer overwrites code typed while the tests were running, and a draft typed just before leaving a drill is saved.
+- Blocked `localStorage` no longer stops the app from starting.
+- Review ignores stored cards for unknown patterns or with fractional counters; SM-2 intervals round up as the algorithm specifies.
+- The test runner no longer treats arrays of different lengths with holes as equal.
+- Page shortcuts are off while the shortcut dialog is open.
+- The "Trail days" reference solution handled sums above 2^31 wrongly; a test now covers it.
+- Graphs and trees have text alternatives listing their nodes and links.
+- Light-theme green darkened to meet 4.5:1 text contrast.
+
 ## [0.1.0] - 2026-11-22
 
 ### Added

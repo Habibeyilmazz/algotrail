@@ -106,6 +106,20 @@ function GridView({ p }: { p: GridPanel }) {
 
 const R = 20;
 
+// Text alternatives so screen readers get the structure, not just a picture.
+export function describeGraph(p: GraphPanel) {
+  const nodes = p.nodes.map((n) => (n.badge ? `${n.id} (${n.badge})` : n.id)).join(', ');
+  const edges = p.edges.map((e) => `${e.from}${p.directed ? ' to ' : '–'}${e.to}${e.weight !== undefined ? ` weight ${e.weight}` : ''}`).join(', ');
+  return `${p.directed ? 'Directed graph' : 'Graph'}. Nodes: ${nodes}. Edges: ${edges}.`;
+}
+
+export function describeTree(p: TreePanel) {
+  const label = new Map(p.nodes.map((n) => [n.id, n.label]));
+  const roots = p.nodes.filter((n) => !n.parent).map((n) => n.label);
+  const links = p.nodes.filter((n) => n.parent).map((n) => `${label.get(n.parent!)} to ${n.label}`);
+  return `Tree. Root${roots.length > 1 ? 's' : ''}: ${roots.join(', ')}.${links.length ? ` Links: ${links.join(', ')}.` : ''}`;
+}
+
 function GraphView({ p }: { p: GraphPanel }) {
   const pos = layoutCircle(p.nodes.map((n) => n.id));
   const S = 126; // radius in user units
@@ -121,7 +135,7 @@ function GraphView({ p }: { p: GraphPanel }) {
   };
   const edgeTone = (a: string, b: string) => p.edgeTones?.[`${a}>${b}`] ?? (p.directed ? undefined : p.edgeTones?.[`${b}>${a}`]);
   return (
-    <svg className="graph" viewBox="0 0 380 360" role="img" aria-label={`Graph with ${p.nodes.length} nodes and ${p.edges.length} edges`}>
+    <svg className="graph" viewBox="0 0 380 360" role="img" aria-label={describeGraph(p)}>
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
           <path d="M0 0L10 5L0 10z" className="arrowhead" />
@@ -175,7 +189,7 @@ function TreeView({ p, duration }: { p: TreePanel; duration: number }) {
   const at = (id: string) => ({ x: 10 + GX / 2 + pos.get(id)!.x * GX, y: 30 + pos.get(id)!.y * GY });
   const byId = new Set(p.nodes.map((n) => n.id));
   return (
-    <svg ref={ref} className="tree" viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: `${width}px` }} role="img" aria-label={`Tree with ${p.nodes.length} nodes`}>
+    <svg ref={ref} className="tree" viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: `${width}px` }} role="img" aria-label={describeTree(p)}>
       {p.nodes.map((n) => {
         if (!n.parent || !byId.has(n.parent)) return null;
         const a = at(n.parent);

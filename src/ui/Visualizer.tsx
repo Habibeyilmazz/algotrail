@@ -4,7 +4,7 @@ import { InputError, type Algo, type Frame } from '../algos/types';
 import { patternById } from '../drills/patterns';
 import { href } from '../lib/router';
 import { Pseudocode, setSpeed, Stage, Transport, usePlayer, Vars } from './Player';
-import { isTyping } from './keys';
+import { ignoreKey } from './keys';
 
 const GROUPS = [...new Set(ALGOS.map((a) => a.group))];
 
@@ -70,7 +70,7 @@ function Workbench({ algo }: { algo: Algo }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (ignoreKey(e) || e.metaKey || e.ctrlKey || e.altKey) return;
       const actions: Record<string, () => void> = {
         ' ': toggle,
         k: toggle,

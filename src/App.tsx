@@ -5,7 +5,7 @@ import { isDue } from './lib/srs';
 import { resetProgress, update, useProgress } from './lib/store';
 import { DrillPage, DrillsPage, PatternPage } from './ui/Drills';
 import { HomePage } from './ui/Home';
-import { isTyping } from './ui/keys';
+import { ignoreKey } from './ui/keys';
 import { ReviewPage, useNow } from './ui/Review';
 import { VisualizerPage } from './ui/Visualizer';
 
@@ -69,7 +69,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (ignoreKey(e) || e.metaKey || e.ctrlKey || e.altKey) return;
       const go: Record<string, () => void> = {
         v: () => (location.hash = href.viz(route.page === 'viz' ? route.id || ALGOS[0].id : ALGOS[0].id)),
         d: () => (location.hash = href.drills),
@@ -77,7 +77,7 @@ export function App() {
         t: cycleTheme,
         '?': () => help.current?.showModal(),
       };
-      if (go[e.key] && !help.current?.open) {
+      if (go[e.key]) {
         e.preventDefault();
         go[e.key]();
       }

@@ -41,8 +41,8 @@ describe('SM-2', () => {
 
 describe('progress sanitizer', () => {
   it('keeps valid data', () => {
-    const p = sanitize({ theme: 'dark', speed: 2, drills: { a: { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { b: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
-    expect(p).toEqual({ theme: 'dark', speed: 2, drills: { a: { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { b: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
+    const p = sanitize({ theme: 'dark', speed: 2, drills: { a: { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
+    expect(p).toEqual({ theme: 'dark', speed: 2, drills: { a: { solved: true, hints: 2, revealed: false, attempts: 3, code: 'x' } }, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 5 } } });
   });
 
   it('drops or repairs junk', () => {
@@ -52,5 +52,10 @@ describe('progress sanitizer', () => {
     expect(p.speed).toBe(1);
     expect(p.drills).toEqual({ a: { solved: false, hints: 0, revealed: false, attempts: 0 } });
     expect(p.cards).toEqual({});
+  });
+
+  it('drops cards for unknown patterns and fractional counters', () => {
+    const p = sanitize({ cards: { gone: { ease: 2.5, interval: 1, reps: 1, due: 5 }, heap: { ease: 2.5, interval: 0, reps: 0.5, due: 0 }, trie: { ease: 2.5, interval: 1, reps: 1, due: 0 } } });
+    expect(Object.keys(p.cards)).toEqual(['trie']);
   });
 });

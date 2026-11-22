@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { PATTERNS } from '../drills/patterns';
 import type { Card } from './srs';
 
 // All progress lives in one localStorage key. Whatever comes back from storage
@@ -46,7 +47,8 @@ export function sanitize(raw: unknown): Progress {
   }
   if (isObj(raw.cards)) {
     for (const [id, c] of Object.entries(raw.cards)) {
-      if (!isObj(c) || !num(c.ease, 1.3, 5) || !num(c.interval, 0, 36500) || !num(c.reps, 0, 1e4) || !num(c.due, 0, 1e14)) continue;
+      if (!PATTERNS.some((p) => p.id === id)) continue; // a pattern that no longer exists would block the queue
+      if (!isObj(c) || !num(c.ease, 1.3, 5) || !Number.isInteger(c.interval) || !num(c.interval, 0, 36500) || !Number.isInteger(c.reps) || !num(c.reps, 0, 1e4) || !num(c.due, 0, 1e14)) continue;
       out.cards[id] = { ease: c.ease as number, interval: c.interval as number, reps: c.reps as number, due: c.due as number };
     }
   }
@@ -55,20 +57,23 @@ export function sanitize(raw: unknown): Progress {
 
 function load(): Progress {
   try {
-    const text = localStorage.getItem(KEY);
+    // Reading localStorage itself can throw (blocked storage), so it stays inside the try.
+    const text = globalThis.localStorage?.getItem(KEY);
     return text ? sanitize(JSON.parse(text)) : emptyProgress();
   } catch {
     return emptyProgress();
   }
 }
 
-let state: Progress = typeof localStorage === 'undefined' ? emptyProgress() : load();
+let state: Progress = load();
+
+export const getProgress = () => state;
 const listeners = new Set<() => void>();
 
 export function update(fn: (draft: Progress) => Progress) {
   state = fn(state);
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    globalThis.localStorage?.setItem(KEY, JSON.stringify(state));
   } catch {
     // Storage full or blocked (private mode): progress stays for this tab only.
   }

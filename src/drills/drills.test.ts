@@ -46,6 +46,8 @@ describe('runner', () => {
     expect(deepEqual(NaN, NaN)).toBe(true);
     expect(deepEqual(0, -0)).toBe(true);
     expect(deepEqual(null, undefined)).toBe(false);
+    expect(deepEqual([], new Array(3))).toBe(false);
+    expect(deepEqual([1], [1, , ])).toBe(false);
   });
 
   it('show is readable', () => {

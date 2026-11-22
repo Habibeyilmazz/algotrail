@@ -16,6 +16,7 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   if (typeof a === 'number' && typeof b === 'number') return Number.isNaN(a) && Number.isNaN(b);
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
   if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && a.length !== (b as unknown[]).length) return false; // holes have no keys
   const ka = Object.keys(a);
   const kb = Object.keys(b);
   if (ka.length !== kb.length) return false;

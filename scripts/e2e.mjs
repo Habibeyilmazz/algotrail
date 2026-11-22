@@ -109,6 +109,15 @@ try {
     await page.getByText(/Could not run your code/).waitFor();
   });
 
+  await step('a draft typed just before leaving the page is kept', async () => {
+    await page.goto(`${BASE}#/drills/rotated-minimum`);
+    await page.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 42; }');
+    await page.evaluate(() => (location.hash = '#/drills'));
+    await page.getByRole('heading', { name: 'Pattern drills' }).waitFor();
+    await page.goto(`${BASE}#/drills/rotated-minimum`);
+    assert.equal(await page.getByLabel('Code for Rotated log').inputValue(), 'function rotatedMin(a) { return 42; }');
+  });
+
   await step('review grades a due card and reschedules it', async () => {
     await page.goto(`${BASE}#/review`);
     await page.getByRole('button', { name: 'Add Two pointers to review' }).click();
@@ -129,6 +138,8 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     await page.keyboard.press('?');
     await page.getByRole('heading', { name: 'Keyboard shortcuts' }).waitFor();
+    await page.keyboard.press('t'); // shortcuts are off while the dialog is open
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     await page.keyboard.press('Escape');
     await page.keyboard.press('d');
     await page.getByRole('heading', { name: 'Pattern drills' }).waitFor();

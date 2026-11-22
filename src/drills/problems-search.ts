@@ -106,7 +106,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
     title: 'Trail days',
     prompt: [
       'A trail is a list of segment lengths in kilometres, in order. You will hike all of them, in order, over at most `days` days. Each day covers a run of whole consecutive segments.',
-      'Return the smallest possible length of your longest day.',
+      'Return the smallest possible length of your longest day. A segment can be up to 10^9 km long.',
     ],
     fn: 'minLongestDay',
     params: 'segments, days',
@@ -116,11 +116,12 @@ export const SEARCH_PROBLEMS: Problem[] = [
       { args: [[4, 4, 4], 3], expected: 4 },
       { args: [[4, 4, 4], 1], expected: 12 },
       { args: [[10, 1, 1, 1], 5], expected: 10 },
+      { args: [[1000000000, 1000000000], 2], expected: 1000000000 },
     ],
     hints: [
       'Instead of searching the plan, search the answer: the daily limit.',
       'Given a limit, you can check in one greedy pass whether the trail fits in `days` days: keep walking until the next segment would break the limit.',
-      'The limit is between max(segments) and sum(segments). Binary search for the smallest limit that fits.',
+      'The limit is between max(segments) and sum(segments). Binary search for the smallest limit that fits. The sum can pass 2^31, so take the middle with Math.floor, not >> 1.',
     ],
     solution: `function minLongestDay(segments, days) {
   const fits = (limit) => {
@@ -134,7 +135,7 @@ export const SEARCH_PROBLEMS: Problem[] = [
   let lo = Math.max(...segments);
   let hi = segments.reduce((a, b) => a + b, 0);
   while (lo < hi) {
-    const mid = (lo + hi) >> 1;
+    const mid = Math.floor((lo + hi) / 2); // sums can pass 2^31, where >> 1 breaks
     if (fits(mid)) hi = mid; else lo = mid + 1;
   }
   return lo;
