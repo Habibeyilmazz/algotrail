@@ -554,7 +554,7 @@ try {
     await phone.getByRole('alert').waitFor();
     assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'input error overflows');
     await phone.goto(`${BASE}#/drills/kth-largest`);
-    for (const body of [`console.log("${long}"); return "${long}";`, `throw new Error("${long}");`, `${long}`]) {
+    for (const body of [`console.log("${long}"); return "${long}";`, `throw new Error("${long}");`, `${long} ${long}`]) {
       await phone.getByLabel('Code for K-th largest reading').fill(`function kthLargest() { ${body} }`);
       await phone.getByRole('button', { name: /Run tests/ }).click();
       await phone.locator('.result-summary').waitFor();
