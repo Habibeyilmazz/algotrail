@@ -32,6 +32,7 @@ npm run build      # static site in dist/
 npm run preview    # serves dist/ at http://localhost:4201
 npm run e2e        # builds, then runs 25 user journeys in Playwright (Chromium) against dist/ on port 4202
                    # (first time only: npx playwright install chromium)
+BROWSER=firefox npm run e2e   # or webkit (first: npx playwright install firefox)
 ```
 
 There is no backend. `dist/` is a static site that works from any path on any static host, including GitHub Pages. It needs to be served over HTTP: opened straight from disk (`file://`), browsers block its module scripts and the page stays blank.
@@ -111,7 +112,7 @@ Where algotrail fits: you are learning a pattern (two pointers, BFS, a DP table)
 
 ## Status and roadmap
 
-Working and tested: everything listed under Features. The unit tests (vitest) and the end-to-end suite (Playwright) run in CI on every push. Only Chromium has been tested end to end; Firefox and Safari have not.
+Working and tested: everything listed under Features. The unit tests (vitest) and the end-to-end suite (Playwright) run in CI on every push. CI runs the end-to-end suite in Chromium, Firefox and WebKit, using Playwright's builds on Linux (one step, saving a draft typed just before the tab closes, is skipped in Firefox because it fails there intermittently; see CHANGELOG). WebKit is the engine behind Safari but is not Safari itself, and nothing has been tried on a real phone.
 
 Not built yet:
 

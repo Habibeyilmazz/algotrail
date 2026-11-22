@@ -18,6 +18,7 @@ npm run typecheck
 npm test             # vitest unit tests
 npm run e2e          # builds, then drives the built app in Playwright Chromium
                      # (first time only: npx playwright install chromium)
+                     # CI also runs it with BROWSER=firefox and BROWSER=webkit
 ```
 
 ## Adding a drill
