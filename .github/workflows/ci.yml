@@ -34,6 +34,7 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npx vite build && node scripts/diag-close.mjs # temporary diagnosis
+        if: matrix.browser == 'firefox'
         env:
           BROWSER: ${{ matrix.browser }}
       - run: npm run e2e # builds first
