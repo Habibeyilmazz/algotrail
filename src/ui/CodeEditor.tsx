@@ -22,6 +22,9 @@ export function CodeEditor({ value, onChange, onRun, onBlur, label }: { value: s
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter or Tab inside an input method composition (Japanese, Chinese, Korean) belongs to the IME;
+    // Safari sends the confirming Enter just after composition ends, with keyCode 229.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     const el = e.currentTarget;
     const { selectionStart: s, selectionEnd: t, value: v } = el;
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {

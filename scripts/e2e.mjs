@@ -255,6 +255,24 @@ try {
     assert.equal(await editor.inputValue(), 'if (a) {\n  return 1;\n    x');
   });
 
+  await step('Enter that confirms an input method composition does not break the line', async () => {
+    if (BROWSER !== 'chromium') {
+      console.log(`# skipped in ${BROWSER}: drives the input method through the Chrome DevTools Protocol`);
+      return;
+    }
+    const editor = page.getByLabel('Code for Rotated log');
+    await editor.fill('  // ');
+    await editor.press('End');
+    // Typing Japanese: the Enter that picks 日本 from the candidates arrives as a keydown with isComposing set.
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.imeSetComposition', { text: 'にほん', selectionStart: 3, selectionEnd: 3 });
+    await cdp.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 229 });
+    await cdp.send('Input.insertText', { text: '日本' });
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    await cdp.detach();
+    assert.equal(await editor.inputValue(), '  // 日本');
+  });
+
   await step('a draft typed just before closing the tab is kept', async () => {
     if (BROWSER === 'firefox') {
       // In Firefox CI about half the runs lost the draft although the editor held it at pagehide; not reproduced
