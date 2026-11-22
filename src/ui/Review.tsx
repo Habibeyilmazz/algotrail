@@ -7,13 +7,14 @@ import { update, useProgress } from '../lib/store';
 import { addToReview } from './Drills';
 import { isTyping } from './keys';
 
+/** Re-renders every so often so "due" labels move on; returns the time of this render. */
 export function useNow(everyMs = 30_000) {
-  const [now, setNow] = useState(Date.now());
+  const [, tick] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), everyMs);
+    const t = setInterval(() => tick((x) => x + 1), everyMs);
     return () => clearInterval(t);
   }, [everyMs]);
-  return now;
+  return Date.now();
 }
 
 export function ReviewPage() {
