@@ -193,11 +193,13 @@ export const trie: Algo = {
     { id: 'prefix', label: 'Prefix to look up', initial: 'tra' },
   ],
   run(input) {
-    const words = input.words.toLowerCase().split(/[\s,]+/).filter(Boolean);
-    if (words.length === 0 || words.length > 10) throw new InputError('Words: enter 1-10 words.');
-    for (const w of words) if (!/^[a-z]{1,8}$/.test(w)) throw new InputError(`Words: "${w}" must be 1-8 letters a-z.`);
+    // Check before lowercasing: toLowerCase turns "İ" into two characters and the Kelvin sign into "k".
+    const typed = input.words.split(/[\s,]+/).filter(Boolean);
+    if (typed.length === 0 || typed.length > 10) throw new InputError('Words: enter 1-10 words.');
+    for (const w of typed) if (!/^[a-z]{1,8}$/i.test(w)) throw new InputError(`Words: "${w}" must be 1-8 letters a-z.`);
+    const words = typed.map((w) => w.toLowerCase());
+    if (!/^[a-z]{0,8}$/i.test(input.prefix.trim())) throw new InputError('Prefix: up to 8 letters a-z.');
     const prefix = input.prefix.trim().toLowerCase();
-    if (!/^[a-z]{0,8}$/.test(prefix)) throw new InputError('Prefix: up to 8 letters a-z.');
     const { frames, push } = recorder();
     const nodes = new Map<string, boolean>([['', false]]); // path -> isEnd
     const snap = (line: number, note: string, vars: Record<string, string | number>, tones: Record<string, Tone> = {}) => {

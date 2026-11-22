@@ -103,6 +103,14 @@ describe('results', () => {
     expect(last(run('trie')).note).toMatch(/3 words start with "tra": trail, trap, tram/);
     expect(last(run('trie', { prefix: 'x' })).note).toMatch(/No word starts/);
     expect(last(run('trie', { prefix: 'trai' })).note).toMatch(/1 word starts with "trai": trail/);
+    expect(last(run('trie', { words: 'Trail TRAP', prefix: 'TR' })).note).toMatch(/2 words start with "tr"/);
+  });
+
+  it('trie quotes non a-z words as typed and does not fold them into a-z', () => {
+    // "İz".toLowerCase() is "i̇z" and the Kelvin sign "K" lowercases to "k".
+    expect(() => run('trie', { words: 'İz' })).toThrow('"İz" must be');
+    expect(() => run('trie', { words: '\u212Aite' })).toThrow(InputError);
+    expect(() => run('trie', { prefix: '\u212A' })).toThrow(InputError);
   });
 
   it('n-queens produces a valid board', () => {
