@@ -5,6 +5,7 @@ import { compile, runCase } from './runner';
 // so an infinite loop never freezes the UI. It gets only the arguments: the page
 // keeps the expected answers and judges each result itself.
 self.onmessage = (e: MessageEvent<{ code: string; fn: string; args: unknown[][] }>) => {
+  self.postMessage({ type: 'ready' }); // the page starts the time limit now, not while this script downloads
   const { code, fn, args } = e.data;
   let f;
   try {

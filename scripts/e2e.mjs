@@ -157,6 +157,24 @@ try {
     }
   });
 
+  await step('a slow-loading test runner is not blamed on the code', async () => {
+    // On a slow first visit the worker script can take longer than the 3 s limit to arrive.
+    const delay = async (route) => {
+      await new Promise((r) => setTimeout(r, 3500));
+      await route.continue();
+    };
+    await page.route(/worker-.*\.js$/, delay);
+    try {
+      await page.goto(`${BASE}#/drills/floor-sqrt`);
+      await page.getByLabel('Code for Whole square root').fill('function floorSqrt(n) {\n  let r = 0;\n  while ((r + 1) * (r + 1) <= n) r++;\n  return r;\n}');
+      await page.getByRole('button', { name: /Run tests/ }).click();
+      await page.getByText('All 6 tests pass').waitFor({ timeout: 8000 });
+    } finally {
+      await page.unroute(/worker-.*\.js$/, delay);
+    }
+    await page.goto(`${BASE}#/drills/first-departure`);
+  });
+
   await step('code cannot fake a pass, crash the page or flood it with output', async () => {
     await page.getByLabel('Code for First departure').fill(
       'function firstDeparture() {\n  self.postMessage({ type: "case", result: null });\n' +
