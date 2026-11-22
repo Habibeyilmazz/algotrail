@@ -652,7 +652,7 @@ main {
 .wb-head {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
+  gap: 8px 24px;
   align-items: flex-start;
   flex-wrap: wrap;
 }
@@ -832,6 +832,7 @@ main {
 .pseudo code {
   white-space: pre-wrap;
   font-size: 1em;
+  text-indent: -2ch;
 }
 
 .pseudo-n {
@@ -867,6 +868,12 @@ main {
 
 .vars dt {
   font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.vars-none {
+  margin: 0;
+  font-size: 0.85rem;
   color: var(--muted);
 }
 
@@ -1460,6 +1467,11 @@ main {
   overflow-wrap: anywhere;
 }
 
+/* Statement snippets are short (24 characters at most), so keep "r * r <= n" on one line. */
+.drill-brief p code {
+  white-space: nowrap;
+}
+
 .solved-tag {
   font: 700 0.8rem var(--font-body);
   background: var(--done);
@@ -1685,6 +1697,10 @@ main {
 
 .flash-empty {
   border-top-color: var(--done);
+}
+
+.flash > :last-child {
+  margin-bottom: 0;
 }
 
 .flash-count {

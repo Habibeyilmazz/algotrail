@@ -99,11 +99,11 @@ export function ReviewPage() {
         </section>
       ) : (
         <section className="flash flash-empty">
-          <h2>Nothing due right now</h2>
+          <h2>{inDeck.length ? 'Nothing due right now' : 'Your deck is empty'}</h2>
           <p>
             {inDeck.length
               ? `Next up: ${patternById(next[0])?.name}, ${describeDue(next[1], now)}.`
-              : 'Your deck is empty. Solve a drill to add its pattern, or add patterns below.'}
+              : 'Solve a drill to add its pattern, or add patterns below.'}
           </p>
         </section>
       )}
