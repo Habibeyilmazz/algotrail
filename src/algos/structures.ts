@@ -236,7 +236,7 @@ export const trie: Algo = {
     const matches = [...nodes].filter(([id, end]) => end && id.startsWith(prefix)).map(([id]) => id);
     const tones: Record<string, Tone> = {};
     nodes.forEach((_, id) => id.startsWith(prefix) && (tones[id] = 'path'));
-    snap(6, `${matches.length} word${matches.length === 1 ? '' : 's'} start with "${prefix}": ${matches.join(', ') || 'none'}.`, { prefix, matches: matches.length }, tones);
+    snap(6, `${matches.length === 1 ? '1 word starts' : `${matches.length} words start`} with "${prefix}": ${matches.join(', ') || 'none'}.`, { prefix, matches: matches.length }, tones);
     return frames;
   },
 };

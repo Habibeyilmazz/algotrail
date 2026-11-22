@@ -98,6 +98,7 @@ describe('results', () => {
   it('trie finds prefix matches', () => {
     expect(last(run('trie')).note).toMatch(/3 words start with "tra": trail, trap, tram/);
     expect(last(run('trie', { prefix: 'x' })).note).toMatch(/No word starts/);
+    expect(last(run('trie', { prefix: 'trai' })).note).toMatch(/1 word starts with "trai": trail/);
   });
 
   it('n-queens produces a valid board', () => {
