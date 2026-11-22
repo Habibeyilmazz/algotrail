@@ -51,6 +51,7 @@ export function ReviewPage() {
   });
 
   const inDeck = PATTERNS.filter((p) => cards[p.id]);
+  const next = Object.entries(cards).sort((a, b) => a[1].due - b[1].due)[0];
   const notInDeck = PATTERNS.filter((p) => !cards[p.id]);
 
   return (
@@ -101,7 +102,7 @@ export function ReviewPage() {
           <h2>Nothing due right now</h2>
           <p>
             {inDeck.length
-              ? `Next up: ${patternById(Object.entries(cards).sort((a, b) => a[1].due - b[1].due)[0][0])?.name}, ${describeDue(Object.values(cards).sort((a, b) => a.due - b.due)[0], now)}.`
+              ? `Next up: ${patternById(next[0])?.name}, ${describeDue(next[1], now)}.`
               : 'Your deck is empty. Solve a drill to add its pattern, or add patterns below.'}
           </p>
         </section>
