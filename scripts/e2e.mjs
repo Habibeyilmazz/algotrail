@@ -446,7 +446,7 @@ try {
     }
   });
 
-  await step('the content security policy blocks injected inline scripts', async () => {
+  await step('the content security policy blocks injected inline scripts and styles', async () => {
     const before = errors.length;
     // Firefox logs the blocked script a moment later, so wait for that message before dropping it.
     const logged = page.waitForEvent('console', { predicate: (m) => /Content.Security.Policy/i.test(m.text()), timeout: 3000 }).catch(() => {});
@@ -461,6 +461,18 @@ try {
         }),
     );
     assert.match(blocked, /^script-src/);
+    // An injected <style> must not apply: inline CSS can restyle the page or leak text through attribute selectors.
+    const styled = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          document.addEventListener('securitypolicyviolation', (e) => resolve(e.violatedDirective), { once: true });
+          const s = document.createElement('style');
+          s.textContent = 'body { outline: 7px solid rgb(1, 2, 3) }';
+          document.head.append(s);
+          setTimeout(() => resolve(getComputedStyle(document.body).outlineWidth === '7px' ? 'applied' : 'no event'), 1000);
+        }),
+    );
+    assert.match(styled, /^style-src/);
     await logged;
     // The browser logs the blocked script as a console error; that one is expected.
     errors.splice(before, errors.length - before, ...errors.slice(before).filter((e) => !/Content.Security.Policy/i.test(e)));
