@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Try your own input (round 12, feature)
+
+Used the app as a newcomer would: watched a few visualizers, opened drills, ran the empty starter and a wrong answer. The thing missing most was a way to run your code on an input of your own: the only cases were the drill's fixed tests, so checking an edge case you thought of, or shrinking a failing test to see what goes wrong, meant editing a test by hand inside your function.
+
+- **Added: *Try your own input* on every drill page** (a closed `<details>` under the editor). Type the arguments as JSON values separated by commas, the way the examples are written (the box starts with the first example). Your code and the reference solution run on them in two workers under the usual 3 s limit, and the page shows both answers, whether they match, and your `console.log` output. If the reference throws or runs out of time, the page says the input is probably outside the problem's rules. The reference answer is shown without its code, so this works before you reveal the solution. A custom run is not an attempt and never marks a drill solved.
+- Arguments go through `parseArgs` (`src/drills/runner.ts`): `JSON.parse` only, at most 10,000 characters, and exactly as many values as the function has parameters, with a message that names them (`Give 2 arguments (nums, k), not 1.`). `judge` now passes the returned value through to the page (data only, used for the comparison). Unit tests cover parsing, refusing non-JSON (`'single'`, `undefined`, `NaN`, trailing commas, code) and the first example of every drill reading back as its own arguments; a new e2e step (26 in all) runs a match, a malformed input and an infinite loop, and checks the run left no attempt behind. Checked by hand at 1280 px and at 390 px in the dark theme (no horizontal scroll).
+- **Known limit:** the reference solutions assume valid input, so outside a problem's rules they may still return an answer (`kthLargest([5, 1, 9], 7)` returns 1) rather than throw; the help text says to keep to the rules. The custom input is not saved: it resets to the first example when you open the drill again.
+- **Still open (unchanged):** the Firefox tab-close draft step is still skipped and not reproduced (no Firefox on this machine; Playwright's Chromium is the only browser installed here). The security-review skill was not run this round. Codex was asked for a review and its usage limit was still reached. Nothing tried on a real phone.
+
 ### Security pass (round 11)
 
 Reviewed the whole repo by hand against the trust boundaries (share-link query and hash, backup import and `localStorage`, other tabs' `storage` events, the drill worker), the CSP, the workflows and the dependencies. The security-review skill could not run (it needs the session's working directory to be a git repository, and this session's was not); Codex was asked once and its usage limit was still reached.
