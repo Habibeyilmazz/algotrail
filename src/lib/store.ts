@@ -104,7 +104,17 @@ export const getProgress = () => state;
 export let saveFailed = false;
 const listeners = new Set<() => void>();
 
+let reloading = false;
+
+/** Reload so stored progress (just erased or imported) is read fresh. Saves stop first: the tab-close
+ * draft save would otherwise write this tab's old progress back during the reload. */
+export function reloadFromStorage() {
+  reloading = true;
+  location.reload();
+}
+
 export function update(fn: (draft: Progress) => Progress) {
+  if (reloading) return;
   state = fn(state);
   try {
     globalThis.localStorage?.setItem(KEY, JSON.stringify(state));

@@ -198,6 +198,36 @@ try {
     assert.deepEqual(drills, {});
   });
 
+  await step('a pending draft is not written back after erasing or importing', async () => {
+    // Reset code leaves a draft waiting for the autosave with the editor unfocused, so no blur saves it first;
+    // the reload that follows Erase or Import must not let the tab-close save write it (or old progress) back.
+    const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')));
+    const pendingReset = async () => {
+      await page.goto(`${BASE}#/drills/rotated-minimum`);
+      const editor = page.getByLabel('Code for Rotated log');
+      await editor.fill('function rotatedMin(a) { return 8; }');
+      await editor.blur();
+      page.once('dialog', (d) => d.accept());
+      await page.getByRole('button', { name: 'Reset code' }).click();
+    };
+    await pendingReset();
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: 'Erase my progress' }).click();
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(500);
+    assert.deepEqual((await stored()).drills, {});
+
+    await pendingReset();
+    const progress = { drills: {}, cards: { heap: { ease: 2.5, interval: 1, reps: 1, due: 0 } }, theme: 'system', speed: 1 };
+    page.once('dialog', (d) => d.accept());
+    await page.getByLabel('Backup file to import').setInputFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'algotrail', version: 1, exportedAt: null, progress })) });
+    await page.getByRole('status').getByText(/^Imported/).waitFor();
+    assert.deepEqual(await stored(), progress);
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: 'Erase my progress' }).click();
+    await page.waitForLoadState('load');
+  });
+
   await step('review grades a due card and reschedules it', async () => {
     await page.goto(`${BASE}#/review`);
     await page.getByRole('button', { name: 'Add Two pointers to review' }).click();

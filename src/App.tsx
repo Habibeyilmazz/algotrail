@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ALGOS } from './algos';
 import { href, useRoute, type Route } from './lib/router';
 import { isDue } from './lib/srs';
-import { backupFileName, backupText, getProgress, saveFailed, KEY, MAX_BACKUP_CHARS, parseBackup, resetProgress, summarize, update, useProgress } from './lib/store';
+import { backupFileName, backupText, getProgress, saveFailed, KEY, MAX_BACKUP_CHARS, parseBackup, reloadFromStorage, resetProgress, summarize, update, useProgress } from './lib/store';
 import { DrillPage, DrillsPage, PatternPage } from './ui/Drills';
 import { HomePage } from './ui/Home';
 import { ignoreKey } from './ui/keys';
@@ -125,7 +125,7 @@ export function App() {
     flash(`Imported ${summarize(backup.progress)}.`);
     // Reload (store.ts loads the saved key) rather than updating in place, for the same reason as erasing:
     // a pending draft save must not overwrite the imported code.
-    location.reload();
+    reloadFromStorage();
   };
 
   const cycleTheme = () => update((s) => ({ ...s, theme: THEMES[(THEMES.indexOf(s.theme) + 1) % THEMES.length] }));
@@ -205,7 +205,7 @@ export function App() {
                 if (!confirm('Erase solved drills, saved code and review schedule from this browser?')) return;
                 resetProgress();
                 // Reload so a pending draft autosave or a test run still in flight cannot write old progress back.
-                location.reload();
+                reloadFromStorage();
               }}
             >
               Erase my progress
