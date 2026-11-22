@@ -36,7 +36,11 @@ export const isDue = (card: Card, now: number) => card.due <= now;
 export function describeDue(card: Card, now: number): string {
   const ms = card.due - now;
   if (ms <= 0) return 'due now';
-  if (ms < DAY) return ms < 3_600_000 ? `in ${Math.max(1, Math.round(ms / 60_000))} min` : `in ${Math.round(ms / 3_600_000)} h`;
-  const days = Math.round(ms / DAY);
+  // Round first, then pick the unit, so 59.6 min reads "in 1 h" rather than "in 60 min".
+  const min = Math.max(1, Math.round(ms / 60_000));
+  if (min < 60) return `in ${min} min`;
+  const h = Math.round(ms / 3_600_000);
+  if (h < 24) return `in ${h} h`;
+  const days = Math.max(1, Math.round(ms / DAY));
   return `in ${days} day${days === 1 ? '' : 's'}`;
 }

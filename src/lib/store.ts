@@ -61,6 +61,10 @@ export const MAX_BACKUP_CHARS = 5_000_000;
 export const backupText = (p: Progress, now = Date.now()) =>
   JSON.stringify({ app: 'algotrail', version: 1, exportedAt: new Date(now).toISOString(), progress: p }, null, 2);
 
+// The local date: toISOString() would name a file made at 01:00 in UTC+3 after the day before.
+export const backupFileName = (d: Date) =>
+  `algotrail-backup-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+
 export function parseBackup(text: string): { progress: Progress; exportedAt: string | null } {
   if (text.length > MAX_BACKUP_CHARS) throw new Error('This file is too large to be an algotrail backup.');
   let raw: unknown;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ALGOS } from './algos';
 import { href, useRoute, type Route } from './lib/router';
 import { isDue } from './lib/srs';
-import { backupText, getProgress, KEY, MAX_BACKUP_CHARS, parseBackup, resetProgress, summarize, update, useProgress } from './lib/store';
+import { backupFileName, backupText, getProgress, KEY, MAX_BACKUP_CHARS, parseBackup, resetProgress, summarize, update, useProgress } from './lib/store';
 import { DrillPage, DrillsPage, PatternPage } from './ui/Drills';
 import { HomePage } from './ui/Home';
 import { ignoreKey } from './ui/keys';
@@ -92,7 +92,7 @@ export function App() {
   const exportBackup = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([backupText(getProgress())], { type: 'application/json' }));
-    a.download = `algotrail-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = backupFileName(new Date());
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
     setDataMsg(`Exported ${summarize(getProgress())}.`);

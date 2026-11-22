@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { describeDue, newCard, review } from './srs';
-import { backupText, emptyProgress, MAX_BACKUP_CHARS, parseBackup, sanitize, summarize, type Progress } from './store';
+import { backupFileName, backupText, emptyProgress, MAX_BACKUP_CHARS, parseBackup, sanitize, summarize, type Progress } from './store';
 
 const DAY = 86_400_000;
 
@@ -36,6 +36,13 @@ describe('SM-2', () => {
     expect(describeDue(c, 0)).toBe('due now');
     expect(describeDue({ ...c, due: 600_000 }, 0)).toBe('in 10 min');
     expect(describeDue({ ...c, due: 3 * DAY }, 0)).toBe('in 3 days');
+  });
+
+  it('never says "in 60 min" or "in 24 h"', () => {
+    const c = newCard(0);
+    expect(describeDue({ ...c, due: 59.6 * 60_000 }, 0)).toBe('in 1 h');
+    expect(describeDue({ ...c, due: 23.6 * 3_600_000 }, 0)).toBe('in 1 day');
+    expect(describeDue({ ...c, due: 1_000 }, 0)).toBe('in 1 min');
   });
 });
 
@@ -85,6 +92,17 @@ describe('progress backups', () => {
   it('cleans what is inside a backup like stored progress', () => {
     const text = JSON.stringify({ app: 'algotrail', version: 1, exportedAt: 'whenever', progress: { theme: 'neon', drills: { a: { solved: 1 } }, cards: { gone: {} } } });
     expect(parseBackup(text)).toEqual({ progress: { ...emptyProgress(), drills: { a: { solved: false, hints: 0, revealed: false, attempts: 0 } } }, exportedAt: null });
+  });
+
+  it('names the file by the local date, not the UTC date', () => {
+    vi.stubEnv('TZ', 'Pacific/Kiritimati'); // UTC+14
+    try {
+      expect(backupFileName(new Date(Date.UTC(2026, 10, 21, 12)))).toBe('algotrail-backup-2026-11-22.json');
+      vi.stubEnv('TZ', 'Pacific/Pago_Pago'); // UTC-11
+      expect(backupFileName(new Date(Date.UTC(2026, 0, 1, 5)))).toBe('algotrail-backup-2025-12-31.json');
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('summarizes progress for the import prompt', () => {
