@@ -169,7 +169,17 @@ function Drill({ problem: p }: { problem: Problem }) {
     const t = setTimeout(() => save(code), 400);
     return () => clearTimeout(t);
   }, [code]);
-  useEffect(() => () => save(latest.current), []);
+  useEffect(() => {
+    // Closing or hiding the tab gives no blur and no time for the timer above.
+    const flush = () => save(latest.current);
+    addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    return () => {
+      removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', flush);
+      flush();
+    };
+  }, []);
 
   const run = async () => {
     if (running) return;

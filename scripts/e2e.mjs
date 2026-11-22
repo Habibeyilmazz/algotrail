@@ -151,6 +151,19 @@ try {
     assert.match(await page.getByLabel('Code for Rotated log').inputValue(), /^function rotatedMin\(a\) \{\n  \n\}/);
   });
 
+  await step('a draft typed just before closing the tab is kept', async () => {
+    const ctx = await browser.newContext(); // two tabs sharing one localStorage
+    const other = await ctx.newPage();
+    await other.goto(`${BASE}#/drills`);
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}#/drills/rotated-minimum`);
+    await p.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
+    await p.close({ runBeforeUnload: true }); // well inside the 400 ms autosave delay, editor still focused
+    const saved = await other.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1') ?? '{}').drills?.['rotated-minimum']?.code);
+    assert.equal(saved, 'function rotatedMin(a) { return 5; }');
+    await ctx.close();
+  });
+
   await step('a huge paste does not stop the rest of progress from saving', async () => {
     await page.goto(`${BASE}#/drills/rotated-minimum`);
     const editor = page.getByLabel('Code for Rotated log');
