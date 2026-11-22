@@ -158,10 +158,13 @@ function Answer({ side }: { side: { r: CaseResult } | { problem: string } }) {
   return side.r.error ? <span>Threw <code>{side.r.error}</code></span> : <code>{side.r.got}</code>;
 }
 
+// Your own input per drill, kept while the tab is open; not stored, as it is scratch work.
+const ownInputs = new Map<string, string>();
+
 // Runs your code and the reference solution on arguments you type; the reference supplies the expected answer.
 // It never marks the drill solved: only the drill's own tests do.
 function OwnInput({ p, code }: { p: Problem; code: string }) {
-  const [text, setText] = useState(() => argsText(p.tests[0].args));
+  const [text, setText] = useState(() => ownInputs.get(p.id) ?? argsText(p.tests[0].args));
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
   const [out, setOut] = useState<{ call: string; mine: RunOutcome; ref: RunOutcome } | null>(null);
@@ -200,7 +203,7 @@ function OwnInput({ p, code }: { p: Problem; code: string }) {
       <form onSubmit={submit}>
         <label className="field wide">
           <span>Arguments for <code>{p.fn}({p.params})</code></span>
-          <input value={text} spellCheck={false} autoComplete="off" aria-invalid={!!error} aria-describedby={error ? 'own-error own-help' : 'own-help'} onChange={(e) => setText(e.target.value)} />
+          <input value={text} spellCheck={false} autoComplete="off" aria-invalid={!!error} aria-describedby={error ? 'own-error own-help' : 'own-help'} onChange={(e) => { ownInputs.set(p.id, e.target.value); setText(e.target.value); }} />
           <small id="own-help">JSON values separated by commas, as in the examples. Your code and the reference solution both run on them; keep to the problem's rules, or the reference answer means little.</small>
         </label>
         <button type="submit" className="btn" disabled={running}>{running ? 'Running…' : 'Run on this input'}</button>

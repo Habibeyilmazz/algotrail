@@ -182,6 +182,12 @@ try {
     await page.getByText('Not the same answer as the reference solution.').waitFor();
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1')).drills['kth-largest']);
     assert.ok(!saved?.solved && !saved?.attempts, 'a custom run is not an attempt');
+    // Leaving the drill and coming back in the same tab keeps the input.
+    await page.evaluate(() => { location.hash = '#/drills'; });
+    await page.getByRole('heading', { name: 'Pattern drills', level: 1 }).waitFor();
+    await page.evaluate(() => { location.hash = '#/drills/kth-largest'; });
+    await page.getByText('Try your own input').click();
+    assert.equal(await page.getByLabel(/Arguments for/).inputValue(), '[5, 1, 9, 9], 2');
   });
 
   await step('offline, a run blames the missing runner, not the code', async () => {
