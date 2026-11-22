@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Share links and merging backups (round 7, feature)
+
+Chosen by using the app: a visualizer run on your own input could not be shown to anyone else (a study partner, an issue report) without describing the input by hand, and importing a backup from a second device wiped this one's progress. Both were listed as not built.
+
+- **Added: share links for visualizers.** Applying input writes it into the address as `#/visualize/<id>?<field>=<value>` (only fields that differ from the example), so the address bar is always a link to what is on screen, and Back returns to the previous input. *Copy link* copies it with the current step (`&step=6`); whoever opens it lands on that step. If the clipboard is blocked, the link is shown in a field to copy by hand. Pressing `V` on a visualizer keeps its input.
+- Link input is untrusted: `inputFromQuery` (`src/algos/index.ts`) reads only the algorithm's own field names, clips each to 2,000 characters, and the result goes through the same parsers as typed input, so a bad link shows the usual input error. `step` must be a positive integer, else the link opens at step 1.
+- Applying input uses `navigate` (`src/lib/router.ts`: `pushState` plus a synchronous `hashchange`), so a key pressed right after Ctrl+Enter acts on the new run; with a plain `location.hash` write the route updated one task later.
+- **Added: Merge when importing a backup.** The import confirm prompt is now a dialog with *Merge* (the default), *Replace* and *Cancel* (Esc also cancels). `mergeProgress` in `src/lib/store.ts`: solved and revealed from either side, the larger hint and attempt counts, this browser's saved code (the backup's when this browser has none) and settings, and the sooner-due card when both decks hold a pattern. Merging is idempotent.
+- Tests: share-link round trip, every algorithm's example fits in a link, hostile queries, step parsing, parseHash with queries, merge semantics (unit); e2e copies a link at step 3, opens it in a fresh browser profile, opens a link with bad input, goes Back, and imports with Cancel, Esc, Replace and Merge. The e2e suite has 22 steps.
+- Codex was asked for a second-opinion review but its usage limit was reached, so this round was reviewed by hand only.
+- **Still open:** only Chromium is tested. FSRS and syntax highlighting are not built. GitHub Pages is not enabled, so share links point at whatever host serves the app (for now, `localhost`). No social preview image.
+
 ### Launch pass (round 6)
 
 Made the repo ready for visitors, and fixed the real bugs found on the way (each reproduced with a failing e2e step first). The e2e suite now has 21 steps.
@@ -112,4 +124,4 @@ Checked with real screenshots at 1440, 1280, 1024, 800 and 390 px in both themes
 - Add a visualizer: write an `Algo` in `src/algos/`, register it in `src/algos/index.ts`, add result tests in `algos.test.ts`. The e2e test expects 18 links in the sidebar; update the count.
 - Add a drill: append to one of `src/drills/problems-*.ts`. `drills.test.ts` runs the reference solution against its tests automatically. Make up new test inputs; do not reuse examples from judge sites. The first two tests are shown as examples on the drill page.
 - Screenshots in `docs/screenshots/` were taken from the real app with Playwright; `scripts/shots.mjs <dir> [baseUrl]` captures the main screens. To refresh the README images: `npm run build && npm run preview`, then `node scripts/readme-shots.mjs`.
-- Still not built (checked in round 4): syntax highlighting in the editor, a layered layout for directed graphs, merging a backup into existing progress, FSRS, visualizer input in the URL. GitHub Pages is not enabled; the workflow is manual only.
+- Still not built (checked in round 7): syntax highlighting in the editor, a layered layout for directed graphs, FSRS. GitHub Pages is not enabled; the workflow is manual only.
