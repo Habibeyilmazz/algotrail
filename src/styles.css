@@ -95,6 +95,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Keep focused elements clear of the sticky top bar (WCAG 2.4.11). */
+  scroll-padding-top: 76px;
 }
 
 body {
@@ -1784,7 +1786,13 @@ main {
 }
 
 @media (max-width: 600px) {
+  /* The bar wraps to two rows here; pinned, it would cover an eighth of a phone screen. */
+  html {
+    scroll-padding-top: 0;
+  }
+
   .topbar {
+    position: static;
     gap: 10px;
     flex-wrap: wrap;
     padding: 8px 16px;
