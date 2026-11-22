@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ALGOS } from './algos';
 import { href, useRoute, type Route } from './lib/router';
 import { isDue } from './lib/srs';
-import { backupFileName, backupText, getProgress, KEY, MAX_BACKUP_CHARS, parseBackup, resetProgress, summarize, update, useProgress } from './lib/store';
+import { backupFileName, backupText, getProgress, saveFailed, KEY, MAX_BACKUP_CHARS, parseBackup, resetProgress, summarize, update, useProgress } from './lib/store';
 import { DrillPage, DrillsPage, PatternPage } from './ui/Drills';
 import { HomePage } from './ui/Home';
 import { ignoreKey } from './ui/keys';
@@ -188,6 +188,11 @@ export function App() {
         {page(route)}
       </main>
       <footer className="footer">
+        {saveFailed && (
+          <p role="alert" className="input-error">
+            This browser is not saving your progress (storage is full or blocked). It lasts until you close this tab; export a backup to keep it.
+          </p>
+        )}
         <p>
           Progress is saved in this browser only.{' '}
           <span className="footer-actions">

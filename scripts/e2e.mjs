@@ -263,6 +263,23 @@ try {
     errors.splice(before, errors.length - before, ...errors.slice(before).filter((e) => !/Content Security Policy/.test(e)));
   });
 
+  await step('a browser that refuses to save says so', async () => {
+    const ctx = await browser.newContext();
+    await ctx.addInitScript(() => {
+      Storage.prototype.setItem = () => {
+        throw new DOMException('full', 'QuotaExceededError');
+      };
+    });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errors.push(e.message));
+    await p.goto(`${BASE}#/patterns/heap`);
+    assert.equal(await p.getByRole('alert').count(), 0, 'no warning before anything failed');
+    await p.getByRole('button', { name: 'Add it now' }).click();
+    await p.getByRole('alert').getByText(/not saving your progress/).waitFor();
+    await p.getByText(/In your review deck/).waitFor(); // the tab keeps working from memory
+    await ctx.close();
+  });
+
   await step('no horizontal scroll at phone width', async () => {
     const phone = await browser.newPage({ viewport: { width: 375, height: 812 } });
     phone.on('pageerror', (e) => errors.push(e.message));

@@ -99,14 +99,17 @@ function load(): Progress {
 let state: Progress = load();
 
 export const getProgress = () => state;
+/** True while the last save failed, so the page can say progress lives in this tab only. */
+export let saveFailed = false;
 const listeners = new Set<() => void>();
 
 export function update(fn: (draft: Progress) => Progress) {
   state = fn(state);
   try {
     globalThis.localStorage?.setItem(KEY, JSON.stringify(state));
+    saveFailed = false;
   } catch {
-    // Storage full or blocked (private mode): progress stays for this tab only.
+    saveFailed = true; // storage full or blocked: progress stays for this tab only
   }
   listeners.forEach((l) => l());
 }
