@@ -281,27 +281,32 @@ try {
 
   await step('a draft typed just before closing the tab is kept', async () => {
     const ctx = await browser.newContext(); // two tabs sharing one localStorage
+    // Record every save either tab makes: which page, during which event, how long after load, and the draft it held.
+    await ctx.addInitScript(() => {
+      const set = Storage.prototype.setItem;
+      let n = 0;
+      Storage.prototype.setItem = function (k, v) {
+        if (k !== 'algotrail:v1') return set.call(this, k, v);
+        const note = `${location.hash} ${window.event?.type ?? 'no event'} at ${Math.round(performance.now())} ms, draft ends ${JSON.parse(v).drills?.['rotated-minimum']?.code?.slice(-6)}`;
+        const key = `probe-save-${Math.random().toString(36).slice(2, 6)}-${++n}`;
+        try { set.call(this, k, v); set.call(this, key, note); } catch (e) { set.call(this, key, `${note}, threw ${e}`); throw e; }
+      };
+    });
     const other = await ctx.newPage();
     await other.goto(`${BASE}#/drills`);
     const p = await ctx.newPage();
     await p.goto(`${BASE}#/drills/rotated-minimum`);
     await p.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
+    const filled = Date.now();
     await p.evaluate(() => {
       // The editor's text at each event, and the value React last rendered into it (its props on the element).
       ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => {
         const el = document.querySelector('textarea');
         const props = el[Object.keys(el).find((k) => k.startsWith('__reactProps'))];
-        localStorage.setItem(`probe-${t}`, `editor ends ${el.value.slice(-6)}, React ends ${props?.value?.slice(-6)}`);
+        localStorage.setItem(`probe-${t}`, `at ${Math.round(performance.now())} ms, editor ends ${el.value.slice(-6)}, React ends ${props?.value?.slice(-6)}`);
       }));
-      // Record each save the app makes from here on: during which event, whether it threw, and the draft it held.
-      const set = Storage.prototype.setItem;
-      let n = 0;
-      Storage.prototype.setItem = function (k, v) {
-        if (k !== 'algotrail:v1') return set.call(this, k, v);
-        const note = `${window.event?.type ?? 'no event'}, draft ends ${JSON.parse(v).drills?.['rotated-minimum']?.code?.slice(-6)}`;
-        try { set.call(this, k, v); set.call(this, `probe-save-${++n}`, note); } catch (e) { set.call(this, `probe-save-${++n}`, `${note}, threw ${e}`); throw e; }
-      };
     });
+    const gap = Date.now() - filled;
     await p.close({ runBeforeUnload: true }); // well inside the 400 ms autosave delay, editor still focused
     // Firefox passes a write on to other tabs a moment later.
     const read = () => other.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1') ?? '{}').drills?.['rotated-minimum']?.code);
@@ -311,10 +316,10 @@ try {
     if (BROWSER === 'firefox' && got !== 'function rotatedMin(a) { return 5; }') {
       // In Firefox CI about half the runs lose this draft; not reproduced locally (see CHANGELOG.md). Report what
       // the page did instead of failing, so each CI run adds evidence.
-      console.log(`# known Firefox issue, draft lost. Saw: ${probes || 'nothing'}`);
+      console.log(`# known Firefox issue, draft lost. Closed ${gap} ms after typing. Saw: ${probes || 'nothing'}`);
     } else {
       assert.equal(got, 'function rotatedMin(a) { return 5; }', `saw: ${probes || 'nothing'}`);
-      if (BROWSER === 'firefox') console.log(`# Firefox kept the draft. Saw: ${probes}`);
+      if (BROWSER === 'firefox') console.log(`# Firefox kept the draft. Closed ${gap} ms after typing. Saw: ${probes}`);
     }
     await ctx.close();
   });
