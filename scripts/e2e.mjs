@@ -159,12 +159,16 @@ try {
   });
 
   await step('offline, a run blames the missing runner, not the code', async () => {
+    // Firefox would serve the worker from its cache while offline; routing turns the cache off.
+    const abort = (route) => route.abort('internetdisconnected');
+    await page.route(/worker-.*\.js$/, abort);
     await page.context().setOffline(true);
     try {
       await page.getByRole('button', { name: /Run tests/ }).click();
-      await page.getByRole('button', { name: /Run tests/ }).waitFor({ timeout: 25_000 }); // not "Running…"
-      assert.match(await page.locator('.result-summary').innerText(), /The test runner did not load/);
+      await page.getByText(/The test runner did not load/).waitFor({ timeout: 25_000 })
+        .catch(async () => assert.fail(`showed: ${await page.locator('.result-summary').innerText()}`));
     } finally {
+      await page.unroute(/worker-.*\.js$/, abort);
       await page.context().setOffline(false);
     }
   });
