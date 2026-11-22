@@ -1,5 +1,5 @@
 // End-to-end smoke test against the production build.
-// Usage: npm run build && npm run e2e   (serves dist/ on port 4202)
+// Usage: npm run e2e   (builds, then serves dist/ on port 4202)
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
@@ -76,6 +76,8 @@ try {
       await page.keyboard.press('End');
       assert.ok((await page.locator('.stage .panel').count()) > 0, h);
     }
+    await page.goto(`${BASE}#/visualize/no-such-algo`);
+    await page.getByRole('heading', { name: 'No such visualizer' }).waitFor();
   });
 
   await step('a correct drill solution passes and is saved', async () => {
@@ -116,6 +118,12 @@ try {
     await page.getByRole('heading', { name: 'Pattern drills' }).waitFor();
     await page.goto(`${BASE}#/drills/rotated-minimum`);
     assert.equal(await page.getByLabel('Code for Rotated log').inputValue(), 'function rotatedMin(a) { return 42; }');
+    // Reset asks first; Playwright dismisses the confirm, so the code stays.
+    await page.getByRole('button', { name: 'Reset code' }).click();
+    assert.equal(await page.getByLabel('Code for Rotated log').inputValue(), 'function rotatedMin(a) { return 42; }');
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: 'Reset code' }).click();
+    assert.match(await page.getByLabel('Code for Rotated log').inputValue(), /^function rotatedMin\(a\) \{\n  \n\}/);
   });
 
   await step('review grades a due card and reschedules it', async () => {

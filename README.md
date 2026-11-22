@@ -9,7 +9,7 @@ Reading about Dijkstra is not the same as watching the heap settle each node, an
 
 ## Quickstart
 
-Needs Node.js 22 (CI uses 22; Vite 8 needs 20.19 or newer).
+Needs Node.js 20.19 or newer (CI uses 22).
 
 ```sh
 git clone https://github.com/Habibeyilmazz/algotrail.git
@@ -24,7 +24,8 @@ Other scripts:
 npm test           # unit tests (vitest): algorithms, every reference solution, runner, SM-2, storage
 npm run typecheck  # tsc
 npm run build      # static site in dist/
-npm run e2e        # Playwright smoke test against dist/ (needs a Chromium for Playwright 1.65.1)
+npm run e2e        # builds, then runs a Playwright smoke test against dist/ on port 4202
+                   # (first time only: npx playwright install chromium)
 ```
 
 There is no backend. `dist/` is a static site that works from any folder, including GitHub Pages.
