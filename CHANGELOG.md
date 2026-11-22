@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Design and accessibility pass (round 2)
+
+Checked with real screenshots at 1440, 1280, 1024, 800 and 390 px in both themes, and with axe-core (WCAG 2.2 AA plus best practice) on every page at desktop and phone width. axe now reports nothing on the pages checked.
+
+- Ruled-out cells (outside the binary-search range, discarded merge halves) were faded to 2:1 contrast. They now have a dashed outline and muted text at 4.5:1 or better.
+- A single small panel (one array) sits in the middle of the stage instead of leaving an empty band above the note.
+- Home: the demo array stays on one row beside the hero copy (it wrapped from 961 to 1099 px); its step counter stays on the transport row on phones; the patterns table no longer wraps "not started" or the solved count.
+- Keyboard focus no longer lands under the sticky top bar (`scroll-padding-top`). On phones the two-row top bar scrolls away instead of covering an eighth of the screen.
+- Template code blocks and wide DP tables can be focused and scrolled with the keyboard. While a DP table has focus the arrow keys scroll it rather than step the player.
+- Maze walls and queens are `role="img"` so their labels are read; the scrubber announces "Step N of M"; the pseudocode panel is no longer a nested `aside` landmark.
+- A wrong visualizer link keeps the algorithm list beside the message; wrong drill and pattern links point to the drill list.
+- The shortcut dialog shows one keycap per key; `console.log` output in test results is labelled; speed controls sit at the right edge when the transport wraps; "Add it now" on a pattern page has its own line.
+- `scripts/readme-shots.mjs` retakes the four README screenshots from a running preview, and they were retaken.
+
 ### Changed
 
 - 44 drill test cases in 27 drills (often the two shown as examples) reused the exact inputs of well-known LeetCode and textbook examples. They now use new inputs, worked out by hand and confirmed by the reference solutions. The drill screenshot was retaken.
@@ -47,4 +61,5 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Add a visualizer: write an `Algo` in `src/algos/`, register it in `src/algos/index.ts`, add result tests in `algos.test.ts`. The e2e test expects 18 links in the sidebar; update the count.
 - Add a drill: append to one of `src/drills/problems-*.ts`. `drills.test.ts` runs the reference solution against its tests automatically. Make up new test inputs; do not reuse examples from judge sites. The first two tests are shown as examples on the drill page.
-- Screenshots in `docs/screenshots/` were taken from the real app with Playwright; `scripts/shots.mjs <dir> [baseUrl]` captures the main screens.
+- Screenshots in `docs/screenshots/` were taken from the real app with Playwright; `scripts/shots.mjs <dir> [baseUrl]` captures the main screens. To refresh the README images: `npm run build && npm run preview`, then `node scripts/readme-shots.mjs`.
+- Still not built (checked in round 2): syntax highlighting in the editor, a layered layout for directed graphs, progress export/import, FSRS. GitHub Pages is not enabled; the workflow is manual only.
