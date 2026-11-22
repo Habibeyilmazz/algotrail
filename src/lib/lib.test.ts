@@ -24,6 +24,14 @@ describe('SM-2', () => {
     expect(c.ease).toBe(1.3);
   });
 
+  it('stays within what the sanitizer keeps, however long the streak', () => {
+    let c = newCard(0);
+    for (let i = 0; i < 40; i++) c = review(c, 'easy', c.due);
+    expect(c.ease).toBe(5);
+    expect(c.interval).toBe(36_500);
+    expect(sanitize({ cards: { heap: c } }).cards.heap).toEqual(c);
+  });
+
   it('forgetting resets the streak and brings the card back soon', () => {
     let c = review(review(newCard(0), 'good', 0), 'good', DAY);
     c = review(c, 'again', 10 * DAY);
