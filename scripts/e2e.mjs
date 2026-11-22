@@ -448,8 +448,9 @@ try {
 
   await step('the content security policy blocks injected inline scripts and styles', async () => {
     const before = errors.length;
-    // Firefox logs the blocked script a moment later, so wait for that message before dropping it.
-    const logged = page.waitForEvent('console', { predicate: (m) => /Content.Security.Policy/i.test(m.text()), timeout: 3000 }).catch(() => {});
+    // Firefox logs each blocked script or style a moment later, so wait for both messages before dropping them.
+    const csp = (kind) => page.waitForEvent('console', { predicate: (m) => /Content.Security.Policy/i.test(m.text()) && kind.test(m.text()), timeout: 3000 }).catch(() => {});
+    const logged = Promise.all([csp(/script-src/), csp(/style-src/)]);
     const blocked = await page.evaluate(
       () =>
         new Promise((resolve) => {

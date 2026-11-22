@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Security pass (round 11)
+
+Reviewed the whole repo by hand against the trust boundaries (share-link query and hash, backup import and `localStorage`, other tabs' `storage` events, the drill worker), the CSP, the workflows and the dependencies. The security-review skill could not run (it needs the session's working directory to be a git repository, and this session's was not); Codex was asked once and its usage limit was still reached.
+
+- **Fixed: the CSP allowed inline styles** (`style-src 'self' 'unsafe-inline'`) although nothing needs them: the build links its CSS, and React and GSAP set styles through `element.style` (the CSSOM), which CSP does not restrict. An injected `<style>` would have applied. The policy is now `style-src 'self'` (`vite.config.ts`). The e2e CSP step injects a `<style>` and expects a `style-src` violation; it failed with the old policy. The whole e2e suite reports no other CSP violation in Chromium, Firefox or WebKit. README said styles came "from the same origin only", which is now true.
+- **Checked, no change needed:** a share link with every field at its 2,000-character cap or at each parser's limit builds its frames in at most 8.4 ms (8-Queens, 1,088 frames; `MAX_FRAMES` caps every run at 1,500), so a crafted link cannot freeze a tab. `npm audit`: 0 vulnerabilities; all 101 lockfile entries resolve from registry.npmjs.org with an integrity hash. Git history: no secrets, one noreply author. All five actions are pinned to the commit SHAs their tags point to today (`git ls-remote`), checkout does not persist credentials, workflows default to `contents: read` and no `run:` step interpolates event data. No `innerHTML`, `dangerouslySetInnerHTML` or URL-built `href` in `src`; the backup and stored progress go through `sanitize`; worker messages through `judge`.
+- **Known limits (unchanged):** drill code from an imported backup only runs when you press Run, and the worker has no access to stored progress; on a static host the worker script gets no CSP of its own, so that code can make network requests, as any code you paste into a console can. The meta CSP cannot set `frame-ancestors`. No Dependabot config was added (it would open pull requests unattended).
+- **Still open:** the Firefox tab-close draft step is still skipped and not reproduced (no local Firefox; this round did not install one). Nothing tried on a real phone.
+
 ### Design pass (round 10)
 
 Looked at real screenshots of the built app (Home, three visualizers, drill list, a drill with a failing run, a pattern page, Review empty and with a card, the shortcut dialog, keyboard focus, an input error) at 1440, 1280 and 390 px in light and dark. The design held up; the fixes are small and specific.
