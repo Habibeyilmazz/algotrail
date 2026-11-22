@@ -37,7 +37,7 @@ export function usePlayer(frames: Frame[], autoplay = false) {
     } else setPlaying((p) => !p);
   }, [i, lastIndex]);
 
-  return { i, frame: frames[Math.min(i, lastIndex)], playing, toggle, go, speed, lastIndex, setPlaying };
+  return { i, frame: frames[Math.min(i, lastIndex)], playing, toggle, go, speed, lastIndex };
 }
 
 export function setSpeed(dir: 1 | -1, current: number) {

@@ -6,7 +6,6 @@ import { useRef } from 'react';
 const INDENT = '  ';
 
 export function CodeEditor({ value, onChange, onRun, label }: { value: string; onChange: (v: string) => void; onRun: () => void; label: string }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
   const gutter = useRef<HTMLDivElement>(null);
   const trapTab = useRef(true);
   const lines = value.split('\n').length;
@@ -55,7 +54,6 @@ export function CodeEditor({ value, onChange, onRun, label }: { value: string; o
         ))}
       </div>
       <textarea
-        ref={ref}
         aria-label={label}
         aria-describedby="editor-help"
         value={value}
