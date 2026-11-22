@@ -128,7 +128,8 @@ export function NotFound({ what }: { what: string }) {
   return (
     <div className="page">
       <h1>No such {what}</h1>
-      <p><a href={href.home}>Go to the start page</a></p>
+      <p className="lede">This link names a {what} that does not exist.</p>
+      <p><a href={href.drills}>See all drills</a></p>
     </div>
   );
 }

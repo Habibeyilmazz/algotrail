@@ -933,6 +933,8 @@ main {
   display: flex;
   align-items: center;
   gap: 4px;
+  /* When the transport wraps, speed sits at the right edge, under the step count. */
+  margin-left: auto;
 }
 
 .speed-val {
@@ -1844,10 +1846,6 @@ main {
   .work-actions {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .transport .speed {
-    margin-left: auto;
   }
 }
 
