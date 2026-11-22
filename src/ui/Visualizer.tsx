@@ -3,6 +3,7 @@ import { ALGOS, algoById, defaults } from '../algos';
 import { InputError, type Algo, type Frame } from '../algos/types';
 import { patternById } from '../drills/patterns';
 import { href } from '../lib/router';
+import { NotFound } from './Drills';
 import { Pseudocode, setSpeed, Stage, Transport, usePlayer, Vars } from './Player';
 import { ignoreKey } from './keys';
 
@@ -18,7 +19,9 @@ function compute(algo: Algo, input: Record<string, string>): { frames: Frame[] }
 }
 
 export function VisualizerPage({ id }: { id: string }) {
-  const algo = algoById(id) ?? ALGOS[0];
+  // A bare #/visualize opens the first algorithm; a mistyped id says so instead of silently showing another one.
+  const algo = id ? algoById(id) : ALGOS[0];
+  if (!algo) return <NotFound what="visualizer" />;
   return (
     <div className="viz-layout">
       <nav className="viz-nav" aria-label="Algorithms">

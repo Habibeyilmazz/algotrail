@@ -263,7 +263,7 @@ function Drill({ problem: p }: { problem: Problem }) {
         <div className="work-bar">
           <h2>Your code</h2>
           <div className="work-actions">
-            <button type="button" className="btn ghost small" onClick={() => setCode(starterCode(p))}>Reset code</button>
+            <button type="button" className="btn ghost small" onClick={() => (code === starterCode(p) || confirm('Replace your code with the empty starter?')) && setCode(starterCode(p))}>Reset code</button>
             <button type="button" className="btn primary" onClick={run} disabled={running}>
               {running ? 'Running…' : 'Run tests'} <kbd>⌘/Ctrl ↵</kbd>
             </button>
