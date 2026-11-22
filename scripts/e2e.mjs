@@ -296,19 +296,21 @@ try {
       const remove = EventTarget.prototype.removeEventListener;
       const wrapped = new WeakMap();
       let l = 0;
+      // Console messages from a closing tab do not reach Playwright in Firefox, so the log goes into storage too.
+      const log = (text) => { console.log(`# ${text}`); try { set.call(localStorage, `probe-log-${Math.round(performance.now() * 1000)}-${++l}`, text); } catch {} };
       EventTarget.prototype.addEventListener = function (type, fn, opts) {
         if ((type !== 'pagehide' && type !== 'visibilitychange') || typeof fn !== 'function') return add.call(this, type, fn, opts);
-        const tag = `${location.hash} ${type} listener ${++l}`;
-        console.log(`# ${tag} added at ${Math.round(performance.now())} ms`);
+        const tag = `${location.hash} ${type} listener ${l + 1}`;
+        log(`${tag} added at ${Math.round(performance.now())} ms`);
         const w = function (...a) {
-          console.log(`# ${tag} runs at ${Math.round(performance.now())} ms`);
-          try { return fn.apply(this, a); } catch (e) { console.log(`# ${tag} threw ${e}`); throw e; }
+          log(`${tag} runs at ${Math.round(performance.now())} ms`);
+          try { return fn.apply(this, a); } catch (e) { log(`${tag} threw ${e}`); throw e; }
         };
         wrapped.set(fn, w);
         return add.call(this, type, w, opts);
       };
       EventTarget.prototype.removeEventListener = function (type, fn, opts) {
-        if (wrapped.has(fn)) console.log(`# ${location.hash} ${type} listener removed`);
+        if (wrapped.has(fn)) log(`${location.hash} ${type} listener removed`);
         return remove.call(this, type, wrapped.get(fn) ?? fn, opts);
       };
     });
