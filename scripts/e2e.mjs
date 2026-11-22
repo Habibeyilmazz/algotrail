@@ -236,12 +236,12 @@ try {
     const p = await ctx.newPage();
     await p.goto(`${BASE}#/drills/rotated-minimum`);
     await p.getByLabel('Code for Rotated log').fill('function rotatedMin(a) { return 5; }');
-    await p.evaluate(() => ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => localStorage.setItem(`probe-${t}`, '1'))));
+    await p.evaluate(() => ['pagehide', 'visibilitychange', 'beforeunload'].forEach((t) => addEventListener(t, () => localStorage.setItem(`probe-${t}`, document.querySelector('textarea').value.slice(-6)))));
     await p.close({ runBeforeUnload: true }); // well inside the 400 ms autosave delay, editor still focused
     // Firefox passes a write on to other tabs a moment later.
     const read = () => other.evaluate(() => JSON.parse(localStorage.getItem('algotrail:v1') ?? '{}').drills?.['rotated-minimum']?.code);
     for (let i = 0; i < 20 && !(await read()); i++) await other.waitForTimeout(100);
-    const probes = await other.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('probe-')).join(' '));
+    const probes = await other.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('probe-')).map((k) => `${k} (editor ends ${localStorage.getItem(k)})`).join(', '));
     assert.equal(await read(), 'function rotatedMin(a) { return 5; }', `events seen: ${probes || 'none'}`);
     await ctx.close();
   });
