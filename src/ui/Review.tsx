@@ -75,7 +75,7 @@ export function ReviewPage() {
                 <h3>Core idea</h3>
                 <p>{current.core}</p>
                 <h3>Template</h3>
-                <pre className="code-block"><code>{current.template}</code></pre>
+                <pre className="code-block" tabIndex={0}><code>{current.template}</code></pre>
                 <p className="muted">
                   Rewatch: {current.visualizers.map((v, k) => (
                     <span key={v}>{k > 0 && ', '}<a href={href.viz(v)}>{algoById(v)?.title}</a></span>

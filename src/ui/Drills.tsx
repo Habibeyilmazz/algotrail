@@ -98,7 +98,7 @@ export function PatternPage({ id }: { id: string }) {
             {pattern.signals.map((s) => <li key={s}>{s}</li>)}
           </ul>
           <h2>Shape of the code</h2>
-          <pre className="code-block"><code>{pattern.template}</code></pre>
+          <pre className="code-block" tabIndex={0}><code>{pattern.template}</code></pre>
           <h2>Watch it run</h2>
           <ul className="link-list">
             {pattern.visualizers.map((v) => (
@@ -113,10 +113,10 @@ export function PatternPage({ id }: { id: string }) {
           {card ? (
             <p>In your review deck, next review {describeDue(card, Date.now())}.</p>
           ) : (
-            <p>
-              Not in your review deck yet. It is added when you solve a drill here.{' '}
+            <>
+              <p>Not in your review deck yet. It is added when you solve a drill here.</p>
               <button type="button" className="btn small" onClick={() => addToReview(pattern.id)}>Add it now</button>
-            </p>
+            </>
           )}
         </section>
       </div>
@@ -243,7 +243,7 @@ function Drill({ problem: p }: { problem: Problem }) {
         <h2>Reference solution</h2>
         {state.revealed ? (
           <>
-            <pre className="code-block"><code>{p.solution}</code></pre>
+            <pre className="code-block" tabIndex={0}><code>{p.solution}</code></pre>
             <p><strong>Complexity.</strong> {p.complexity}</p>
           </>
         ) : confirmReveal ? (

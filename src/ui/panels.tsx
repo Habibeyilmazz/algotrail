@@ -74,7 +74,8 @@ function GridView({ p }: { p: GridPanel }) {
   const cols = p.cells[0]?.length ?? 0;
   const labelled = Boolean(p.colLabels);
   return (
-    <div className={p.board ? 'grid grid-board' : 'grid grid-table'} style={{ gridTemplateColumns: `${p.rowLabels ? 'max-content ' : ''}repeat(${cols}, minmax(0, ${p.board ? '2.6rem' : '2.4rem'}))` }}>
+    // A wide DP table scrolls sideways on phones, so keyboard users need to be able to focus it.
+    <div className={p.board ? 'grid grid-board' : 'grid grid-table'} tabIndex={p.board ? undefined : 0} style={{ gridTemplateColumns: `${p.rowLabels ? 'max-content ' : ''}repeat(${cols}, minmax(0, ${p.board ? '2.6rem' : '2.4rem'}))` }}>
       {labelled && (
         <>
           {p.rowLabels && <span className="grid-label" />}
